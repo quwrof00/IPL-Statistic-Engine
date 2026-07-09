@@ -611,15 +611,14 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-zinc-200 selection:bg-[#b39170] selection:text-white pb-24">
       
       {/* 0. NAVBAR */}
-      <nav className="sticky top-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-zinc-800/80 px-4 md:px-8 py-4 flex items-center justify-between shadow-xl">
-        <div 
-          className="flex items-center gap-2 md:gap-4 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => { document.getElementById('home')?.scrollIntoView({ behavior: 'smooth' }); }}
-        >
-          <div className="w-8 h-8 rounded-sm bg-[#b39170] flex items-center justify-center text-black font-black text-xl leading-none tracking-tighter">A</div>
-          <span className="text-xl font-bold tracking-tight text-white">Apex<span className="text-[#b39170]">Score</span></span>
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-8 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-zinc-900/50">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 md:w-8 md:h-8 bg-[#b39170] rounded-sm flex items-center justify-center shadow-lg shadow-[#b39170]/20">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="md:w-[14px] md:h-[14px]"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span className="text-lg md:text-xl font-bold tracking-tight text-white">Apex<span className="text-[#b39170]">Score</span></span>
         </div>
-        <div className="flex gap-4 md:gap-8 text-xs md:text-sm font-semibold text-zinc-400 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        <div className="flex items-center gap-3 md:gap-8 text-[11px] sm:text-xs md:text-sm font-semibold text-zinc-400">
           <a href="#home" onClick={(e) => { e.preventDefault(); document.getElementById('home')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-white transition-colors">Home</a>
           <a href="#leaderboards" onClick={(e) => { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-white transition-colors">Leaderboards</a>
           <a href="#compare" onClick={(e) => { e.preventDefault(); document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-white transition-colors">Compare</a>
