@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, ZAxis, Cell, LabelList } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CHART_COLORS = ['#b39170', '#3b82f6', '#ef4444', '#10b981'];
 
@@ -446,25 +447,6 @@ export default function Home() {
       .slice(0, 50);
   }, [data, search, teamFilter, seasonFilter, engine, sortKey, sortDirection]);
 
-  // Modal Keyboard Shortcuts
-  useEffect(() => {
-    if (selectedPlayer) {
-      document.body.style.overflow = 'hidden';
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') setSelectedPlayer(null);
-        else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-          const idx = filteredData.findIndex(p => p.player_name === selectedPlayer.player_name && p.season === selectedPlayer.season && p.primary_team === selectedPlayer.primary_team);
-          if (e.key === 'ArrowLeft' && idx > 0) setSelectedPlayer(filteredData[idx - 1]);
-          else if (e.key === 'ArrowRight' && idx >= 0 && idx < filteredData.length - 1) setSelectedPlayer(filteredData[idx + 1]);
-        }
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => { document.body.style.overflow = 'unset'; window.removeEventListener('keydown', handleKeyDown); };
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [selectedPlayer, filteredData]);
-
   // Comparison Search Logic
   useEffect(() => {
     if (compareSearch.length > 1) {
@@ -587,22 +569,50 @@ export default function Home() {
 
   const selectedIndex = selectedPlayer ? filteredData.findIndex(p => p.player_name === selectedPlayer.player_name && p.season === selectedPlayer.season && p.primary_team === selectedPlayer.primary_team) : -1;
 
+  const [slideDirection, setSlideDirection] = useState<number>(0);
+
   const handlePrev = useCallback(() => {
-    if (selectedIndex > 0) setSelectedPlayer(filteredData[selectedIndex - 1]);
+    if (selectedIndex > 0) {
+      setSlideDirection(-1);
+      setSelectedPlayer(filteredData[selectedIndex - 1]);
+    }
   }, [selectedIndex, filteredData]);
 
   const handleNext = useCallback(() => {
-    if (selectedIndex >= 0 && selectedIndex < filteredData.length - 1) setSelectedPlayer(filteredData[selectedIndex + 1]);
+    if (selectedIndex >= 0 && selectedIndex < filteredData.length - 1) {
+      setSlideDirection(1);
+      setSelectedPlayer(filteredData[selectedIndex + 1]);
+    }
   }, [selectedIndex, filteredData]);
+  const touchStartX = useRef<number | null>(null);
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartX.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (diff > 50) handleNext();
+    else if (diff < -50) handlePrev();
+    touchStartX.current = null;
+  };
 
+  // Modal Keyboard Shortcuts
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedPlayer(null);
-      if (e.key === 'ArrowLeft') handlePrev();
-      if (e.key === 'ArrowRight') handleNext();
-    };
-    if (selectedPlayer) window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (selectedPlayer) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setSelectedPlayer(null);
+        else if (e.key === 'ArrowLeft') handlePrev();
+        else if (e.key === 'ArrowRight') handleNext();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => { document.body.style.overflow = 'unset'; window.removeEventListener('keydown', handleKeyDown); };
+    } else {
+      document.body.style.overflow = 'unset';
+    }
   }, [selectedPlayer, handlePrev, handleNext]);
 
   const teamColor = selectedPlayer ? getTeamColor(selectedPlayer.primary_team) : "#b39170";
@@ -1585,205 +1595,224 @@ export default function Home() {
       </section>
 
       {/* MODAL Overlay */}
-      {selectedPlayer && modalStats && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4">
-          <div className="absolute inset-0 bg-zinc-900/80 transition-opacity" onClick={() => setSelectedPlayer(null)}></div>
-          <div className="relative bg-white w-full max-w-5xl h-full md:h-auto max-h-[100vh] md:max-h-[90vh] overflow-y-auto overscroll-contain shadow-2xl flex flex-col rounded-none md:rounded-sm">
-            
-            {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-zinc-100 px-4 md:px-10 py-6 md:py-8 flex flex-col md:flex-row justify-between items-start md:items-center z-40 relative">
-              
-              <div className="absolute top-4 right-4 md:static flex items-center gap-1 md:gap-2 z-50">
-                <button onClick={handlePrev} disabled={selectedIndex <= 0} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-100 md:bg-zinc-50 hover:bg-zinc-200 md:hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30 disabled:hover:bg-zinc-50">←</button>
-                <button onClick={handleNext} disabled={selectedIndex < 0 || selectedIndex >= filteredData.length - 1} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-100 md:bg-zinc-50 hover:bg-zinc-200 md:hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30 disabled:hover:bg-zinc-50">→</button>
-                <button onClick={() => setSelectedPlayer(null)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-200 md:bg-transparent text-zinc-600 md:text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors md:ml-2">✕</button>
-              </div>
-
-              <div className="flex flex-col relative pl-4 md:pl-6 pr-28 md:pr-0 w-full md:w-auto">
-                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full opacity-60" style={{ backgroundColor: teamColor }}></div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter mb-1 md:mb-2 text-zinc-900 leading-none truncate">
-                  {selectedPlayer.player_name}
-                </h2>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                  {selectedPlayer.primary_team} <span className="mx-1 md:mx-2">•</span> Season {formatSeason(selectedPlayer.season)}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between w-full md:w-auto mt-6 md:mt-0">
-                <div className="flex items-center justify-between md:justify-end gap-2 md:gap-8 text-right w-full md:w-auto md:pr-8 md:border-r border-zinc-100">
-                  <div className="flex gap-2 md:gap-6 pr-2 md:pr-4">
-                    <div className="text-right">
-                      <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Season Rank</div>
-                      <div className="text-lg sm:text-xl md:text-3xl font-black tabular-nums leading-none text-zinc-800 flex items-baseline justify-end gap-0.5 md:gap-1">
-                        <span className="text-xs md:text-xl text-zinc-400 font-normal">#</span>{modalStats[engine as string]?.seasonRank} <span className="text-[9px] md:text-xs font-bold text-zinc-400">/ {modalStats[engine as string]?.seasonN}</span>
-                      </div>
-                    </div>
-                    <div className="w-px h-8 md:h-10 bg-zinc-200 mt-1 md:mt-2"></div>
-                    <div className="text-right">
-                      <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Global Rank</div>
-                      <div className="text-lg sm:text-xl md:text-3xl font-black tabular-nums leading-none text-[#b39170] flex items-baseline justify-end gap-0.5 md:gap-1">
-                        <span className="text-xs md:text-xl opacity-70 font-normal">#</span>{modalStats[engine as string]?.rank} <span className="text-[9px] md:text-xs font-bold text-[#b39170]/70">/ {data.length}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pl-2 border-l border-zinc-100 md:border-none md:pl-0">
-                    <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1 whitespace-nowrap">{engineNames[engine as keyof typeof engineNames]}</div>
-                    <div className="text-xl sm:text-2xl md:text-3xl font-black tabular-nums leading-none text-zinc-900">
-                      {Number(selectedPlayer[engine as keyof PlayerSeason]).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Modal Body */}
-            <div className="p-4 md:p-10 bg-[#fdfdfc] overflow-y-auto flex-1">
-              <div className="mb-8 md:mb-10 flex flex-col rounded-sm overflow-hidden shadow-sm">
-                {modalTab === 'batting' && (
-                  <>
-                  <div className="py-6 px-4 md:px-10 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center relative gap-4">
-                     <div className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Batting Performance</div>
-                     <div className="flex items-center gap-4 md:gap-10 w-full md:w-auto justify-between md:justify-end">
-                       <div className="text-right flex flex-col items-end">
-                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">{engine === 'quwrof_v11' ? 'Percentile' : 'Points'}</div>
-                         <div className="text-4xl font-black tracking-tighter tabular-nums text-white leading-none">{engine === 'quwrof_v11' ? modalStats['bat_percentile']?.val.toFixed(1) + '%' : modalStats['bat_points']?.val.toFixed(1)}</div>
-                       </div>
-                       <div className="w-px h-10 bg-zinc-700"></div>
-                       <div className="text-left flex flex-col items-start mr-4">
-                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1">Season Rank</div>
-                         <div className="text-4xl font-black tracking-tighter tabular-nums text-zinc-300 leading-none flex items-baseline gap-1">
-                           <span className="text-2xl font-normal text-zinc-500">#</span>{engine === 'quwrof_v11' ? modalStats['bat_percentile']?.seasonRank : modalStats['bat_points']?.seasonRank}
-                           <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase ml-1">/ {modalStats['bat_points']?.seasonN}</span>
-                         </div>
-                       </div>
-                       <div className="text-left flex flex-col items-start">
-                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b39170] mb-1">Global Rank</div>
-                         <div className="text-4xl font-black tracking-tighter tabular-nums text-[#b39170] leading-none flex items-baseline gap-1">
-                           <span className="text-2xl font-normal opacity-70">#</span>{engine === 'quwrof_v11' ? modalStats['bat_percentile']?.rank : modalStats['bat_points']?.rank}
-                         </div>
-                       </div>
-                     </div>
-                  </div>
-                  <div className="py-4 px-4 md:px-10 bg-zinc-50 border-t border-zinc-200 border-x border-b flex justify-between items-center">
-                    <div className="flex gap-6 md:gap-12 w-full justify-between md:justify-start">
-                       <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Runs</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.runs || 0}</span></div>
-                       <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Avg</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.batting_average ? selectedPlayer.batting_average.toFixed(2) : '-'}</span></div>
-                       <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">SR</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.strike_rate ? selectedPlayer.strike_rate.toFixed(2) : '-'}</span></div>
-                    </div>
-                  </div>
-                  </>
-                )}
-                {modalTab === 'bowling' && (
-                  <>
-                  <div className="py-6 px-4 md:px-10 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center relative gap-4">
-                     <div className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Bowling Performance</div>
-                     <div className="flex items-center gap-4 md:gap-10 w-full md:w-auto justify-between md:justify-end">
-                       <div className="text-right flex flex-col items-end">
-                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">{engine === 'quwrof_v11' ? 'Percentile' : 'Points'}</div>
-                         <div className="text-4xl font-black tracking-tighter tabular-nums text-white leading-none">{engine === 'quwrof_v11' ? modalStats['bowl_percentile']?.val.toFixed(1) + '%' : modalStats['bowl_points']?.val.toFixed(1)}</div>
-                       </div>
-                       <div className="w-px h-10 bg-zinc-700"></div>
-                       <div className="text-left flex flex-col items-start mr-4">
-                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1">Season Rank</div>
-                         <div className="text-4xl font-black tracking-tighter tabular-nums text-zinc-300 leading-none flex items-baseline gap-1">
-                           <span className="text-2xl font-normal text-zinc-500">#</span>{engine === 'quwrof_v11' ? modalStats['bowl_percentile']?.seasonRank : modalStats['bowl_points']?.seasonRank}
-                           <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase ml-1">/ {modalStats['bowl_points']?.seasonN}</span>
-                         </div>
-                       </div>
-                       <div className="text-left flex flex-col items-start">
-                         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b39170] mb-1">Global Rank</div>
-                         <div className="text-4xl font-black tracking-tighter tabular-nums text-[#b39170] leading-none flex items-baseline gap-1">
-                           <span className="text-2xl font-normal opacity-70">#</span>{engine === 'quwrof_v11' ? modalStats['bowl_percentile']?.rank : modalStats['bowl_points']?.rank}
-                         </div>
-                       </div>
-                     </div>
-                  </div>
-                  <div className="py-4 px-4 md:px-10 bg-zinc-50 border-t border-zinc-200 border-x border-b flex justify-between items-center">
-                    <div className="flex gap-6 md:gap-12 w-full justify-between md:justify-start">
-                       <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Wickets</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.wickets || 0}</span></div>
-                       <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Avg</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.bowling_average ? selectedPlayer.bowling_average.toFixed(2) : '-'}</span></div>
-                       <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Econ</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.economy ? selectedPlayer.economy.toFixed(2) : '-'}</span></div>
-                    </div>
-                  </div>
-                  </>
-                )}
-              </div>
-              
-              <div className="mb-8 flex justify-between items-end border-b border-zinc-200 pb-4">
-                <h3 className="text-2xl font-bold tracking-tight text-zinc-900">Metrics Breakdown</h3>
-                <div className="flex bg-zinc-100 p-1 rounded-md">
-                  <button onClick={() => setModalTab('batting')} className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-colors ${modalTab === 'batting' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}>Batting</button>
-                  <button onClick={() => setModalTab('bowling')} className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-colors ${modalTab === 'bowling' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}>Bowling</button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Object.entries(v11MetricNames).map(([key, label]) => {
-                  const isBattingMetric = key.includes('bat') || key === 'rae';
-                  if (modalTab === 'batting' && !isBattingMetric) return null;
-                  if (modalTab === 'bowling' && isBattingMetric) return null;
-
-                  const stat = modalStats[key];
-                  if (!stat) return null;
+      <AnimatePresence>
+        {selectedPlayer && modalStats && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4"
+          >
+            <div className="absolute inset-0 bg-zinc-900/80 transition-opacity" onClick={() => setSelectedPlayer(null)}></div>
+            <AnimatePresence mode="wait" initial={false} custom={slideDirection}>
+              <motion.div 
+                key={`${selectedPlayer.player_name}-${selectedPlayer.season}`}
+                custom={slideDirection}
+                initial={(dir: number) => ({ opacity: 0, x: dir === 1 ? 50 : (dir === -1 ? -50 : 0) })}
+                animate={{ opacity: 1, x: 0 }}
+                exit={(dir: number) => ({ opacity: 0, x: dir === 1 ? -50 : (dir === -1 ? 50 : 0) })}
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                className="relative bg-white w-full max-w-5xl h-full md:h-auto max-h-[100vh] md:max-h-[90vh] overflow-y-auto overscroll-contain shadow-2xl flex flex-col rounded-none md:rounded-sm z-[101]"
+              >
+                {/* Modal Header */}
+                <div className="sticky top-0 bg-white border-b border-zinc-100 px-4 md:px-10 py-6 md:py-8 flex flex-col md:flex-row justify-between items-start md:items-center z-40 relative">
                   
-                  let tagElement = null;
+                  <div className="absolute top-4 right-4 md:static flex items-center gap-1 md:gap-2 z-50">
+                    <button onClick={handlePrev} disabled={selectedIndex <= 0} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-100 md:bg-zinc-50 hover:bg-zinc-200 md:hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30 disabled:hover:bg-zinc-50">←</button>
+                    <button onClick={handleNext} disabled={selectedIndex < 0 || selectedIndex >= filteredData.length - 1} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-100 md:bg-zinc-50 hover:bg-zinc-200 md:hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30 disabled:hover:bg-zinc-50">→</button>
+                    <button onClick={() => setSelectedPlayer(null)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-200 md:bg-transparent text-zinc-600 md:text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors md:ml-2">✕</button>
+                  </div>
+
+                  <div className="flex flex-col relative pl-4 md:pl-6 pr-28 md:pr-0 w-full md:w-auto">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full opacity-60" style={{ backgroundColor: teamColor }}></div>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter mb-1 md:mb-2 text-zinc-900 leading-none truncate">
+                      {selectedPlayer.player_name}
+                    </h2>
+                    <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                      {selectedPlayer.primary_team} <span className="mx-1 md:mx-2">•</span> Season {formatSeason(selectedPlayer.season)}
+                    </div>
+                  </div>
                   
-                  if (stat.rank === 1) { 
-                    tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-[#F9CD05] text-black text-[10px] font-black tracking-widest uppercase shadow-sm border border-yellow-500">TOP 1 ALL TIME</div>;
-                  } else if (stat.rank <= 10) { 
-                    tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-zinc-900 text-white text-[10px] font-black tracking-widest uppercase shadow-sm border border-black">TOP 10</div>;
-                  } else if (stat.rank <= 50) { 
-                    tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-[#b39170] text-white text-[10px] font-black tracking-widest uppercase shadow-sm border border-[#9c7d5f]">TOP 50</div>;
-                  } else if (stat.rank <= 100) { 
-                    tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-zinc-100 text-zinc-700 border border-zinc-300 text-[10px] font-bold tracking-widest uppercase">TOP 100</div>;
-                  }
-
-                  return (
-                    <div key={key} className="bg-white p-4 border border-zinc-200 hover:border-zinc-900 hover:shadow-xl transition-all duration-300 relative group flex flex-col rounded-md">
-                      <div className="absolute top-0 left-0 w-full h-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-md" style={{ backgroundColor: teamColor }}></div>
-                      
-                      {tagElement && (
-                        <div className="mb-3 flex items-start">
-                          {tagElement}
+                  <div className="flex items-center justify-between w-full md:w-auto mt-6 md:mt-0">
+                    <div className="flex items-center justify-between md:justify-end gap-2 md:gap-8 text-right w-full md:w-auto md:pr-8 md:border-r border-zinc-100">
+                      <div className="flex gap-2 md:gap-6 pr-2 md:pr-4">
+                        <div className="text-right">
+                          <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Season Rank</div>
+                          <div className="text-lg sm:text-xl md:text-3xl font-black tabular-nums leading-none text-zinc-800 flex items-baseline justify-end gap-0.5 md:gap-1">
+                            <span className="text-xs md:text-xl text-zinc-400 font-normal">#</span>{modalStats[engine as string]?.seasonRank} <span className="text-[9px] md:text-xs font-bold text-zinc-400">/ {modalStats[engine as string]?.seasonN}</span>
+                          </div>
                         </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest truncate" title={label}>{label}</div>
-                        <InfoTooltip text={metricDescriptions[key]} />
-                      </div>
-
-                      <div className="flex items-end justify-between mb-5">
-                        <div className="flex flex-col">
-                          <span className="mb-1 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Rank</span> 
-                          <span className="text-zinc-900 text-2xl font-black tracking-tighter leading-none">#{stat.rank}</span>
-                        </div>
-                        <div className="flex flex-col items-end">
-                          <span className="mb-1 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Percentile</span> 
-                          <span className="text-zinc-900 text-2xl font-black tracking-tighter leading-none">{stat.percentile.toFixed(1)}%</span>
+                        <div className="w-px h-8 md:h-10 bg-zinc-200 mt-1 md:mt-2"></div>
+                        <div className="text-right">
+                          <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Global Rank</div>
+                          <div className="text-lg sm:text-xl md:text-3xl font-black tabular-nums leading-none text-[#b39170] flex items-baseline justify-end gap-0.5 md:gap-1">
+                            <span className="text-xs md:text-xl opacity-70 font-normal">#</span>{modalStats[engine as string]?.rank} <span className="text-[9px] md:text-xs font-bold text-[#b39170]/70">/ {data.length}</span>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="mt-auto">
-                        <div className="flex justify-between items-center text-[10px] font-bold text-zinc-500 mb-2.5">
-                          <div className="uppercase tracking-widest">Raw Score</div>
-                          <div className="text-zinc-700 tabular-nums font-black text-sm">{stat.val > 0 && stat.val < 1 ? stat.val.toFixed(3) : stat.val.toFixed(2)}</div>
-                        </div>
-                        <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-zinc-900 transition-all duration-700 ease-out" 
-                            style={{ width: `${stat.percentile}%` }}
-                          />
+                      <div className="pl-2 border-l border-zinc-100 md:border-none md:pl-0">
+                        <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1 whitespace-nowrap">{engineNames[engine as keyof typeof engineNames]}</div>
+                        <div className="text-xl sm:text-2xl md:text-3xl font-black tabular-nums leading-none text-zinc-900">
+                          {Number(selectedPlayer[engine as keyof PlayerSeason]).toFixed(2)}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+                  </div>
+                </div>
+                
+                {/* Modal Body */}
+                <div className="p-4 md:p-10 bg-[#fdfdfc] overflow-y-auto flex-1">
+                  <div className="mb-8 md:mb-10 flex flex-col rounded-sm overflow-hidden shadow-sm">
+                    {modalTab === 'batting' && (
+                      <>
+                      <div className="py-6 px-4 md:px-10 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center relative gap-4">
+                         <div className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Batting Performance</div>
+                         <div className="flex items-center gap-4 md:gap-10 w-full md:w-auto justify-between md:justify-end">
+                           <div className="text-right flex flex-col items-end">
+                             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">{engine === 'quwrof_v11' ? 'Percentile' : 'Points'}</div>
+                             <div className="text-4xl font-black tracking-tighter tabular-nums text-white leading-none">{engine === 'quwrof_v11' ? modalStats['bat_percentile']?.val.toFixed(1) + '%' : modalStats['bat_points']?.val.toFixed(1)}</div>
+                           </div>
+                           <div className="w-px h-10 bg-zinc-700"></div>
+                           <div className="text-left flex flex-col items-start mr-4">
+                             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1">Season Rank</div>
+                             <div className="text-4xl font-black tracking-tighter tabular-nums text-zinc-300 leading-none flex items-baseline gap-1">
+                               <span className="text-2xl font-normal text-zinc-500">#</span>{engine === 'quwrof_v11' ? modalStats['bat_percentile']?.seasonRank : modalStats['bat_points']?.seasonRank}
+                               <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase ml-1">/ {modalStats['bat_points']?.seasonN}</span>
+                             </div>
+                           </div>
+                           <div className="text-left flex flex-col items-start">
+                             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b39170] mb-1">Global Rank</div>
+                             <div className="text-4xl font-black tracking-tighter tabular-nums text-[#b39170] leading-none flex items-baseline gap-1">
+                               <span className="text-2xl font-normal opacity-70">#</span>{engine === 'quwrof_v11' ? modalStats['bat_percentile']?.rank : modalStats['bat_points']?.rank}
+                             </div>
+                           </div>
+                         </div>
+                      </div>
+                      <div className="py-4 px-4 md:px-10 bg-zinc-50 border-t border-zinc-200 border-x border-b flex justify-between items-center">
+                        <div className="flex gap-6 md:gap-12 w-full justify-between md:justify-start">
+                           <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Runs</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.runs || 0}</span></div>
+                           <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Avg</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.batting_average ? selectedPlayer.batting_average.toFixed(2) : '-'}</span></div>
+                           <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">SR</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.strike_rate ? selectedPlayer.strike_rate.toFixed(2) : '-'}</span></div>
+                        </div>
+                      </div>
+                      </>
+                    )}
+                    {modalTab === 'bowling' && (
+                      <>
+                      <div className="py-6 px-4 md:px-10 bg-zinc-900 flex flex-col md:flex-row justify-between items-start md:items-center relative gap-4">
+                         <div className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">Bowling Performance</div>
+                         <div className="flex items-center gap-4 md:gap-10 w-full md:w-auto justify-between md:justify-end">
+                           <div className="text-right flex flex-col items-end">
+                             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">{engine === 'quwrof_v11' ? 'Percentile' : 'Points'}</div>
+                             <div className="text-4xl font-black tracking-tighter tabular-nums text-white leading-none">{engine === 'quwrof_v11' ? modalStats['bowl_percentile']?.val.toFixed(1) + '%' : modalStats['bowl_points']?.val.toFixed(1)}</div>
+                           </div>
+                           <div className="w-px h-10 bg-zinc-700"></div>
+                           <div className="text-left flex flex-col items-start mr-4">
+                             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1">Season Rank</div>
+                             <div className="text-4xl font-black tracking-tighter tabular-nums text-zinc-300 leading-none flex items-baseline gap-1">
+                               <span className="text-2xl font-normal text-zinc-500">#</span>{engine === 'quwrof_v11' ? modalStats['bowl_percentile']?.seasonRank : modalStats['bowl_points']?.seasonRank}
+                               <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase ml-1">/ {modalStats['bowl_points']?.seasonN}</span>
+                             </div>
+                           </div>
+                           <div className="text-left flex flex-col items-start">
+                             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b39170] mb-1">Global Rank</div>
+                             <div className="text-4xl font-black tracking-tighter tabular-nums text-[#b39170] leading-none flex items-baseline gap-1">
+                               <span className="text-2xl font-normal opacity-70">#</span>{engine === 'quwrof_v11' ? modalStats['bowl_percentile']?.rank : modalStats['bowl_points']?.rank}
+                             </div>
+                           </div>
+                         </div>
+                      </div>
+                      <div className="py-4 px-4 md:px-10 bg-zinc-50 border-t border-zinc-200 border-x border-b flex justify-between items-center">
+                        <div className="flex gap-6 md:gap-12 w-full justify-between md:justify-start">
+                           <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Wickets</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.wickets || 0}</span></div>
+                           <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Avg</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.bowling_average ? selectedPlayer.bowling_average.toFixed(2) : '-'}</span></div>
+                           <div className="flex flex-col"><span className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Econ</span><span className="text-zinc-900 font-black text-xl tabular-nums leading-none">{selectedPlayer.economy ? selectedPlayer.economy.toFixed(2) : '-'}</span></div>
+                        </div>
+                      </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="mb-8 flex justify-between items-end border-b border-zinc-200 pb-4">
+                    <h3 className="text-2xl font-bold tracking-tight text-zinc-900">Metrics Breakdown</h3>
+                    <div className="flex bg-zinc-100 p-1 rounded-md">
+                      <button onClick={() => setModalTab('batting')} className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-colors ${modalTab === 'batting' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}>Batting</button>
+                      <button onClick={() => setModalTab('bowling')} className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-colors ${modalTab === 'bowling' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}>Bowling</button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Object.entries(v11MetricNames).map(([key, label]) => {
+                      const isBattingMetric = key.includes('bat') || key === 'rae';
+                      if (modalTab === 'batting' && !isBattingMetric) return null;
+                      if (modalTab === 'bowling' && isBattingMetric) return null;
+
+                      const stat = modalStats[key];
+                      if (!stat) return null;
+                      
+                      let tagElement = null;
+                      
+                      if (stat.rank === 1) { 
+                        tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-[#F9CD05] text-black text-[10px] font-black tracking-widest uppercase shadow-sm border border-yellow-500">TOP 1 ALL TIME</div>;
+                      } else if (stat.rank <= 10) { 
+                        tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-zinc-900 text-white text-[10px] font-black tracking-widest uppercase shadow-sm border border-black">TOP 10</div>;
+                      } else if (stat.rank <= 50) { 
+                        tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-[#b39170] text-white text-[10px] font-black tracking-widest uppercase shadow-sm border border-[#9c7d5f]">TOP 50</div>;
+                      } else if (stat.rank <= 100) { 
+                        tagElement = <div className="inline-flex items-center justify-center px-2 py-1 bg-zinc-100 text-zinc-700 border border-zinc-300 text-[10px] font-bold tracking-widest uppercase">TOP 100</div>;
+                      }
+
+                      return (
+                        <div key={key} className="bg-white p-4 border border-zinc-200 hover:border-zinc-900 hover:shadow-xl transition-all duration-300 relative group flex flex-col rounded-md">
+                          <div className="absolute top-0 left-0 w-full h-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-md" style={{ backgroundColor: teamColor }}></div>
+                          
+                          {tagElement && (
+                            <div className="mb-3 flex items-start">
+                              {tagElement}
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest truncate" title={label}>{label}</div>
+                            <InfoTooltip text={metricDescriptions[key]} />
+                          </div>
+
+                          <div className="flex items-end justify-between mb-5">
+                            <div className="flex flex-col">
+                              <span className="mb-1 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Rank</span> 
+                              <span className="text-zinc-900 text-2xl font-black tracking-tighter leading-none">#{stat.rank}</span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <span className="mb-1 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Percentile</span> 
+                              <span className="text-zinc-900 text-2xl font-black tracking-tighter leading-none">{stat.percentile.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-auto">
+                            <div className="flex justify-between items-center text-[10px] font-bold text-zinc-500 mb-2.5">
+                              <div className="uppercase tracking-widest">Raw Score</div>
+                              <div className="text-zinc-700 tabular-nums font-black text-sm">{stat.val > 0 && stat.val < 1 ? stat.val.toFixed(3) : stat.val.toFixed(2)}</div>
+                            </div>
+                            <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-zinc-900 transition-all duration-700 ease-out" 
+                                style={{ width: `${stat.percentile}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
