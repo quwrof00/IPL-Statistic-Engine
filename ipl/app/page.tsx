@@ -130,12 +130,12 @@ const metricDescriptions: Record<string, string> = {
 const InfoTooltip = ({ text }: { text?: string }) => {
   if (!text) return null;
   return (
-    <div className="group/tooltip relative inline-block ml-1.5 align-middle cursor-help z-50">
-      <div className="w-4 h-4 rounded-full border border-[#b39170] text-[#b39170] opacity-70 flex items-center justify-center text-[9px] font-black group-hover/tooltip:opacity-100 group-hover/tooltip:bg-[#b39170] group-hover/tooltip:text-white transition-colors">i</div>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 sm:w-56 p-2.5 bg-zinc-950 text-zinc-300 text-[11px] leading-relaxed rounded-sm shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all pointer-events-none whitespace-normal normal-case tracking-normal font-normal border border-zinc-700 text-left z-[100]">
+    <button type="button" className="group/tooltip relative inline-block ml-1.5 align-middle cursor-help z-50 focus:outline-none">
+      <div className="w-4 h-4 rounded-full border border-[#b39170] text-[#b39170] opacity-70 flex items-center justify-center text-[9px] font-black group-hover/tooltip:opacity-100 group-focus/tooltip:opacity-100 group-hover/tooltip:bg-[#b39170] group-focus/tooltip:bg-[#b39170] group-hover/tooltip:text-white group-focus/tooltip:text-white transition-colors">i</div>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 sm:w-56 p-2.5 bg-zinc-950 text-zinc-300 text-[11px] leading-relaxed rounded-sm shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-focus/tooltip:opacity-100 group-hover/tooltip:visible group-focus/tooltip:visible transition-all pointer-events-none whitespace-normal normal-case tracking-normal font-normal border border-zinc-700 text-left z-[100]">
         {text}
       </div>
-    </div>
+    </button>
   );
 };
 
