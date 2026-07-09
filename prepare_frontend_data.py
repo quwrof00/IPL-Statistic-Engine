@@ -7,8 +7,8 @@ print("Loading datasets...")
 # Base dataset from Final (V6), which already has V1 (quwrof_score), V5 (quwrof_v5), and primary_team
 df_final = pd.read_csv(data_dir / "quwrof_final_scores.csv")
 
-# Rename V1 to be consistent
-df_final = df_final.rename(columns={"quwrof_score": "quwrof_v1"})
+# Rename V1 to be consistent and fix matches column if it was corrupted in prior steps
+df_final = df_final.rename(columns={"quwrof_score": "quwrof_v1", "matches_x": "matches"})
 
 # Load other versions to merge their final scores
 df_v2 = pd.read_csv(data_dir / "quwrof_v2_scores.csv")[["player_name", "season", "quwrof_v2"]]
@@ -44,7 +44,7 @@ merged.fillna({
 
 # Select relevant columns for frontend to keep JSON size small
 columns_to_keep = [
-    "player_name", "season", "primary_team",
+    "player_name", "season", "primary_team", "matches",
     "dominance_percentile", "impact_score", "rarity_score",
     "runs", "batting_average", "strike_rate", "wickets", "bowling_average", "economy",
     "z_sr", "z_econ", "pca_efficiency", "volume_multiplier",
