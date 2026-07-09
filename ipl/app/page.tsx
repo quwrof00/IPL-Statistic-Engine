@@ -8,18 +8,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 const CHART_COLORS = ['#b39170', '#3b82f6', '#ef4444', '#10b981'];
 
 const modalSlideVariants = {
-  enter: (dir: number) => ({
-    x: dir === 1 ? 50 : (dir === -1 ? -50 : 0),
-    opacity: 0
-  }),
+  enter: (dir: number) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (!isMobile) return { x: 0, opacity: 1, transition: { duration: 0 } };
+    return { x: dir === 1 ? 50 : (dir === -1 ? -50 : 0), opacity: 0 };
+  },
   center: {
     x: 0,
-    opacity: 1
+    opacity: 1,
+    transition: { type: "spring" as const, stiffness: 350, damping: 30 }
   },
-  exit: (dir: number) => ({
-    x: dir === 1 ? -50 : (dir === -1 ? 50 : 0),
-    opacity: 0
-  })
+  exit: (dir: number) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (!isMobile) return { x: 0, opacity: 0, transition: { duration: 0 } };
+    return { x: dir === 1 ? -50 : (dir === -1 ? 50 : 0), opacity: 0 };
+  }
 };
 
 type PlayerSeason = {
@@ -958,7 +961,7 @@ export default function Home() {
                               <span className="opacity-70 font-bold mr-1 uppercase">{allMetricNames[sortKey as string] || sortKey}:</span>
                               {sortKey === 'impact_per_match' 
                                 ? (row.matches ? (Number(row[engine as keyof PlayerSeason]) / row.matches).toFixed(2) : '-')
-                                : sortKey.includes('percentile') 
+                                : (sortKey as string).includes('percentile') 
                                   ? `${Number(row[sortKey as keyof PlayerSeason]).toFixed(1)}%` 
                                   : Number(row[sortKey as keyof PlayerSeason]).toFixed(2)}
                             </div>
@@ -1642,7 +1645,6 @@ export default function Home() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 className="relative bg-white w-full max-w-5xl h-full md:h-auto max-h-[100vh] md:max-h-[90vh] overflow-y-auto overscroll-contain shadow-2xl flex flex-col rounded-none md:rounded-sm z-[101]"
@@ -1650,10 +1652,10 @@ export default function Home() {
                 {/* Modal Header */}
                 <div className="sticky top-0 bg-white border-b border-zinc-100 px-4 md:px-10 py-6 md:py-8 flex flex-col md:flex-row justify-between items-start md:items-center z-40 relative">
                   
-                  <div className="absolute top-4 right-4 md:static flex items-center gap-1 md:gap-2 z-50">
-                    <button onClick={handlePrev} disabled={selectedIndex <= 0} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-100 md:bg-zinc-50 hover:bg-zinc-200 md:hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30 disabled:hover:bg-zinc-50">←</button>
-                    <button onClick={handleNext} disabled={selectedIndex < 0 || selectedIndex >= filteredData.length - 1} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-100 md:bg-zinc-50 hover:bg-zinc-200 md:hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30 disabled:hover:bg-zinc-50">→</button>
-                    <button onClick={() => setSelectedPlayer(null)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-zinc-200 md:bg-transparent text-zinc-600 md:text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors md:ml-2">✕</button>
+                  <div className="absolute top-4 right-4 flex md:hidden items-center gap-1 z-50">
+                    <button onClick={handlePrev} disabled={selectedIndex <= 0} className="w-8 h-8 rounded-full flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors disabled:opacity-30">←</button>
+                    <button onClick={handleNext} disabled={selectedIndex < 0 || selectedIndex >= filteredData.length - 1} className="w-8 h-8 rounded-full flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors disabled:opacity-30">→</button>
+                    <button onClick={() => setSelectedPlayer(null)} className="w-8 h-8 rounded-full flex items-center justify-center bg-zinc-200 text-zinc-600 hover:text-red-500 hover:bg-red-50 transition-colors ml-2">✕</button>
                   </div>
 
                   <div className="flex flex-col relative pl-4 md:pl-6 pr-28 md:pr-0 w-full md:w-auto">
@@ -1689,6 +1691,13 @@ export default function Home() {
                           {Number(selectedPlayer[engine as keyof PlayerSeason]).toFixed(2)}
                         </div>
                       </div>
+                    </div>
+                    
+                    {/* Desktop End Buttons */}
+                    <div className="hidden md:flex items-center gap-2 pl-0 md:pl-8">
+                      <button onClick={handlePrev} disabled={selectedIndex <= 0} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30">←</button>
+                      <button onClick={handleNext} disabled={selectedIndex < 0 || selectedIndex >= filteredData.length - 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 text-zinc-600 transition-colors disabled:opacity-30">→</button>
+                      <button onClick={() => setSelectedPlayer(null)} className="w-10 h-10 rounded-full flex items-center justify-center bg-transparent text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-2 z-50">✕</button>
                     </div>
                   </div>
                 </div>
