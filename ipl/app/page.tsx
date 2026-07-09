@@ -1103,14 +1103,14 @@ export default function Home() {
         </section>
       )}
 
-      {/* 6.6. PLAYOFF LEGENDS */}
+      {/* 6.6. PLAYOFF PERFORMERS */}
       {playoffLegends.length > 0 && (
         <section className="py-24 md:py-32 px-0 md:px-8 bg-zinc-950 text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900 via-zinc-950 to-zinc-950"></div>
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="mb-8 md:mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 px-4 md:px-0">
               <div>
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-4 text-white">Playoff Legends</h2>
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-4 text-white">Playoff Performers</h2>
                 <p className="text-zinc-400 text-xl font-light">The ultimate clutch performers. Ranked by equal-weighted Playoff Impact for both batting and bowling.</p>
               </div>
               <div className="flex bg-zinc-900 p-1 rounded-sm border border-zinc-800">
@@ -1426,15 +1426,15 @@ export default function Home() {
                 >
                   {scatterEngine === 'quwrof_v11' ? (
                     <>
-                      <option value="quwrof_v11">Apex V11</option>
-                      <option value="bat_percentile">Batting Pct (V11)</option>
-                      <option value="bowl_percentile">Bowling Pct (V11)</option>
+                      <option value="quwrof_v11">Contextual Pct (V1)</option>
+                      <option value="bat_percentile">Batting Pct (V1)</option>
+                      <option value="bowl_percentile">Bowling Pct (V1)</option>
                       <optgroup label="Basic Stats">
                         {Object.entries(basicMetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
                       </optgroup>
-                      <optgroup label="V11 Advanced Metrics">
+                      <optgroup label="V1 Advanced Metrics">
                         {Object.entries(v11MetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
@@ -1442,16 +1442,16 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <option value="quwrof_v14">Apex V14</option>
-                      <option value="v14_percentile">Overall Pct (V14)</option>
-                      <option value="v14_bat_percentile">Batting Pct (V14)</option>
-                      <option value="v14_bowl_percentile">Bowling Pct (V14)</option>
+                      <option value="quwrof_v14">Apex Score (V2)</option>
+                      <option value="v14_percentile">Overall Pct (V2)</option>
+                      <option value="v14_bat_percentile">Batting Pct (V2)</option>
+                      <option value="v14_bowl_percentile">Bowling Pct (V2)</option>
                       <optgroup label="Basic Stats">
                         {Object.entries(basicMetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
                       </optgroup>
-                      <optgroup label="V14 Advanced Metrics">
+                      <optgroup label="V2 Advanced Metrics">
                         {Object.entries(v14MetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
@@ -1469,15 +1469,15 @@ export default function Home() {
                 >
                   {scatterEngine === 'quwrof_v11' ? (
                     <>
-                      <option value="quwrof_v11">Apex V11</option>
-                      <option value="bat_percentile">Batting Pct (V11)</option>
-                      <option value="bowl_percentile">Bowling Pct (V11)</option>
+                      <option value="quwrof_v11">Contextual Pct (V1)</option>
+                      <option value="bat_percentile">Batting Pct (V1)</option>
+                      <option value="bowl_percentile">Bowling Pct (V1)</option>
                       <optgroup label="Basic Stats">
                         {Object.entries(basicMetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
                       </optgroup>
-                      <optgroup label="V11 Advanced Metrics">
+                      <optgroup label="V1 Advanced Metrics">
                         {Object.entries(v11MetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
@@ -1485,16 +1485,16 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <option value="quwrof_v14">Apex V14</option>
-                      <option value="v14_percentile">Overall Pct (V14)</option>
-                      <option value="v14_bat_percentile">Batting Pct (V14)</option>
-                      <option value="v14_bowl_percentile">Bowling Pct (V14)</option>
+                      <option value="quwrof_v14">Apex Score (V2)</option>
+                      <option value="v14_percentile">Overall Pct (V2)</option>
+                      <option value="v14_bat_percentile">Batting Pct (V2)</option>
+                      <option value="v14_bowl_percentile">Bowling Pct (V2)</option>
                       <optgroup label="Basic Stats">
                         {Object.entries(basicMetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
                       </optgroup>
-                      <optgroup label="V14 Advanced Metrics">
+                      <optgroup label="V2 Advanced Metrics">
                         {Object.entries(v14MetricNames).map(([k, label]) => (
                           <option key={k} value={k}>{label}</option>
                         ))}
