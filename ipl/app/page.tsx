@@ -7,6 +7,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const CHART_COLORS = ['#b39170', '#3b82f6', '#ef4444', '#10b981'];
 
+const modalSlideVariants = {
+  enter: (dir: number) => ({
+    x: dir === 1 ? 50 : (dir === -1 ? -50 : 0),
+    opacity: 0
+  }),
+  center: {
+    x: 0,
+    opacity: 1
+  },
+  exit: (dir: number) => ({
+    x: dir === 1 ? -50 : (dir === -1 ? 50 : 0),
+    opacity: 0
+  })
+};
+
 type PlayerSeason = {
   player_name: string;
   season: string;
@@ -1609,9 +1624,10 @@ export default function Home() {
               <motion.div 
                 key={`${selectedPlayer.player_name}-${selectedPlayer.season}`}
                 custom={slideDirection}
-                initial={(dir: number) => ({ opacity: 0, x: dir === 1 ? 50 : (dir === -1 ? -50 : 0) })}
-                animate={{ opacity: 1, x: 0 }}
-                exit={(dir: number) => ({ opacity: 0, x: dir === 1 ? -50 : (dir === -1 ? 50 : 0) })}
+                variants={modalSlideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
                 transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
