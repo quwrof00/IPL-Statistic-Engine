@@ -948,8 +948,22 @@ export default function Home() {
                         </div>
                       </td>
                       <td className="hidden md:table-cell px-4 py-4 text-sm text-zinc-400 tabular-nums border-b border-zinc-800/50">{formatSeason(row.season)}</td>
-                      <td className={`px-2 md:px-4 py-4 text-right md:text-left text-sm tabular-nums transition-colors border-b border-zinc-800/50 ${(!sortKey || sortKey === engine) ? 'bg-[#b39170]/10 text-[#b39170] font-black' : 'text-zinc-200 font-bold'}`}>
-                        {Number(row[engine as keyof PlayerSeason]).toFixed(2)}
+                      <td className={`px-2 md:px-4 py-4 text-right md:text-left tabular-nums transition-colors border-b border-zinc-800/50 ${(!sortKey || sortKey === engine) ? 'bg-[#b39170]/10' : ''}`}>
+                        <div className="flex flex-col items-end md:items-start justify-center h-full">
+                          <div className={`text-sm ${(!sortKey || sortKey === engine) ? 'text-[#b39170] font-black' : 'text-zinc-200 font-bold'}`}>
+                            {Number(row[engine as keyof PlayerSeason]).toFixed(2)}
+                          </div>
+                          {sortKey && sortKey !== engine && (
+                            <div className="md:hidden text-[9px] sm:text-[10px] font-black text-[#b39170] mt-0.5 whitespace-nowrap tracking-wide">
+                              <span className="opacity-70 font-bold mr-1 uppercase">{allMetricNames[sortKey as string] || sortKey}:</span>
+                              {sortKey === 'impact_per_match' 
+                                ? (row.matches ? (Number(row[engine as keyof PlayerSeason]) / row.matches).toFixed(2) : '-')
+                                : sortKey.includes('percentile') 
+                                  ? `${Number(row[sortKey as keyof PlayerSeason]).toFixed(1)}%` 
+                                  : Number(row[sortKey as keyof PlayerSeason]).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       {(!sortKey || sortKey === engine || sortKey === 'impact_per_match') && (
                         <td className={`hidden md:table-cell px-4 py-4 text-sm tabular-nums transition-colors border-b border-zinc-800/50 ${sortKey === 'impact_per_match' ? 'bg-[#b39170]/10 text-[#b39170] font-bold' : 'text-zinc-400 font-semibold'}`}>
