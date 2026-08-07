@@ -640,7 +640,7 @@ export default function Home() {
 
       {/* 0. NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-8 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-zinc-900/50">
-        <div 
+        <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
@@ -794,6 +794,10 @@ export default function Home() {
             <div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-4 text-white">Best IPL Seasons Of All Time</h2>
               <p className="text-zinc-400 text-lg md:text-xl font-light">Explore the ApexScore architecture.</p>
+              <div className="flex items-center gap-2 mt-3 text-sm text-[#b39170] bg-[#b39170]/10 border border-[#b39170]/20 px-3 py-1.5 rounded-sm inline-flex w-fit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+                <span className="font-medium tracking-wide">Click on any player to view their detailed scorecard</span>
+              </div>
             </div>
 
             <div className="flex flex-col md:flex-row flex-wrap gap-4 bg-zinc-900 border border-zinc-800 p-4 rounded-sm w-full md:w-auto">
