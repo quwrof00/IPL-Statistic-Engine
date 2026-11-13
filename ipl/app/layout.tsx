@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ApexScore | Advanced IPL Analytics",
-  description: "An advanced machine-learning powered rating engine that calculates true match pressure and context for every single ball in IPL history.",
+  title: "SupeRR Selector 2027 | Rajasthan Royals War Room",
+  description: "Tactical Gap Analysis & Dual-Criterion Pressure Rating Engine for the Rajasthan Royals IPL 2027 Mega Auction.",
 };
 
 export default function RootLayout({
