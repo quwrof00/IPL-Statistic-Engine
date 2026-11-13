@@ -1,0 +1,24 @@
+{
+  "total_deliveries": 200999,
+  "pressure_deliveries": 60305,
+  "pressure_pct": 30.0,
+  "pressure_sr": 146.94,
+  "baseline_sr": 136.26,
+  "pressure_dot_pct": 35.61,
+  "baseline_dot_pct": 37.68,
+  "pressure_wicket_rate": 7.65,
+  "baseline_wicket_rate": 4.76,
+  "wkt_risk_multiplier": 1.61,
+  "total_chases": 845,
+  "chase_baseline_win_pct": 49.9,
+  "rrr_10_win_pct": 27.9,
+  "rrr_12_win_pct": 14.3,
+  "death_total_deliveries": 44454,
+  "death_pressure_deliveries": 28900,
+  "death_pressure_pct": 65.0,
+  "phase_distribution": {
+    "death": 28900,
+    "middle": 23261,
+    "powerplay": 8144
+  }
+}
