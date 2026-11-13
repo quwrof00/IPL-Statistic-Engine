@@ -8,18 +8,20 @@
 
 ## 1. Introduction: Why Most Pressure Stats Lie
 
-Back in June, I posted an in-depth breakdown on Reddit: [I analyzed every legal delivery in IPL history to evaluate true season performance](https://www.reddit.com/r/ipl/comments/1uudo98/i_analyzed_every_legal_delivery_in_ipl_history_to/). It hit 30,000+ views and sparked intense debate because it addressed a glaring blind spot in standard cricket metrics: **context blindness**.
+Back in June, I posted an in-depth breakdown on Reddit: **[I analyzed every legal delivery in IPL history to evaluate true season performance](https://www.reddit.com/r/ipl/comments/1uudo98/i_analyzed_every_legal_delivery_in_ipl_history_to/)**. It hit 30,000+ views and sparked intense debate because it addressed a glaring blind spot in standard cricket metrics: **context blindness**.
 
 When people try to measure "clutch" in cricket, they usually take a shortcut:
-$$\text{Pressure Ratio} = \frac{\text{Strike Rate under Pressure}}{\text{Baseline Strike Rate}}$$
 
-This looks neat on paper, but in reality it breaks down:
-1. **The Mediocre Batter Trap:** Take an anchor batter with an ordinary career strike rate of 105. If they bat at 125 in a tight chase, the ratio gives them a 1.19x boost (+19%). But in a modern T20 game, striking at 125 in a chase loses you the match.
-2. **The Elite Finisher Penalty:** Take a proven finisher whose career baseline is already 175. If they come out and strike at 180 under extreme pressure, their ratio is just 1.03x (+3%). 
+> **Conventional Pressure Ratio = Strike Rate under Pressure / Baseline Strike Rate**
+
+This looks neat on paper, but in reality it breaks down completely:
+
+1. **The Mediocre Batter Trap:** Take an anchor batter with an ordinary career strike rate of 105. If they bat at 125 in a tight chase, the ratio gives them a **1.19x boost (+19%)**. But in a modern T20 game, striking at 125 in a chase loses you the match.
+2. **The Elite Finisher Penalty:** Take a proven finisher whose career baseline is already 175. If they come out and strike at 180 under extreme pressure, their ratio is just **1.03x (+3%)**. 
 
 The ratio model rewards mediocrity and penalizes players who are already world-class.
 
-To fix this for the **Rajasthan Royals SupeRR Selector**, I adapted the core pressure math from my open-source [Apex Engine](https://github.com/quwrof00/ipl-statistic-engine). Instead of checking whether a player beat their own baseline, I measure **absolute value added under leverage**: what runs did they score above match expectation, and what runs did they prevent when their team was under the pump?
+To fix this for the **Rajasthan Royals SupeRR Selector**, I adapted the core pressure math from my open-source **[Apex Engine](https://github.com/quwrof00/ipl-statistic-engine)**. Instead of checking whether a player beat their own baseline, I measure **absolute value added under leverage**: what runs did they score above match expectation, and what runs did they prevent when their team was under the pump?
 
 ---
 
@@ -29,23 +31,17 @@ Pressure isn't a vague feeling. It's when a match situation gets tight, error ma
 
 I combed through the 200,999 balls in the official data pack (2022–2026). Here is what the numbers actually show:
 
-```
-                      Total Dataset: 200,999 Deliveries
-                                      │
-             ┌────────────────────────┴────────────────────────┐
-             ▼                                                 ▼
-     Baseline Overs                                   High-Pressure Overs
-     140,694 Balls (70%)                              60,305 Balls (30%)
-     • Wicket rate: 4.76%                             • Wicket rate: 7.65% (1.61x risk)
-     • Chase win rate: 49.9%                          • Win rate @ RRR > 10: 27.9%
-                                                      • Win rate @ RRR > 12: 14.3%
-                                                      • Overs 16-20 density: 65.0%
-```
+| Dimension | Baseline Deliveries (70.0%) | High-Pressure Deliveries (30.0%) |
+|:---|:---|:---|
+| **Deliveries Sample** | 140,694 Balls | 60,305 Balls |
+| **Wicket Dismissal Rate** | 4.76% | **7.65% (1.61x hazard surge)** |
+| **Chasing Win Rate** | 49.9% (at par RRR) | **27.9%** (RRR > 10.0) → **14.3%** (RRR > 12.0) |
+| **Phase Concentration** | Overs 1–15 dominant | **65.0% of all Death Overs (16–20)** |
 
 ### The 4 Real-World Pressure Triggers
 
-1. **The 1.61x Wicket Risk:** In standard overs, wickets fall on **4.76%** of balls. In high-pressure situations, that jumps to **7.65%**. Batters are 61% more likely to get out on any given delivery.
-2. **The RRR Cliff:** Chasing teams win roughly half their games (49.9%) at normal scoring rates. Once the Required Run Rate climbs over **10.0 RPO**, the win rate drops to **27.9%**. Above **12.0 RPO**, it tanks to **14.3%**.
+1. **The 1.61x Wicket Risk:** In standard overs, wickets fall on 4.76% of balls. In high-pressure situations, that jumps to 7.65%. Batters are 61% more likely to get out on any given delivery.
+2. **The RRR Cliff:** Chasing teams win roughly half their games (49.9%) at normal scoring rates. Once the Required Run Rate climbs over 10.0 RPO, the win rate drops to 27.9%. Above 12.0 RPO, it tanks to 14.3%.
 3. **The Death Overs Squeeze:** 65.0% of all balls bowled in overs 16–20 (28,900 of 44,454) qualify as high-pressure deliveries.
 4. **First-Innings Collapses:** Pressure isn't just about chasing. When a team loses 3 or more wickets in the powerplay, the incoming batter faces massive leverage to rebuild the innings without killing the run rate.
 
@@ -58,23 +54,24 @@ The math runs ball-by-ball. No arbitrary black boxes.
 ### 3.1 Batters (`bat_chase_impact`)
 
 For every ball a batter faces during a pressure situation:
-$$\text{bat\_chase\_impact} = \sum \left[ \text{runs} \times (\text{pressure\_multiplier} - 1.0) \right] \times 0.15$$
 
-- In chases, $\text{pressure\_multiplier} = \operatorname{clip}\left(\frac{\text{RRR}}{\text{Season RRR}}, 1.0, 2.0\right)$.
-- If the required rate is at or below the tournament average, the multiplier stays at $1.0$. That means $(\text{multiplier} - 1.0) = 0$. **Stat-padding in easy situations earns 0 bonus points.**
-- If the game is already lost ($\text{RRR} > 36.0$), the multiplier resets to $1.0$ to prevent junk-time stat boosting.
+> **bat_chase_impact = SUM [ runs * (pressure_multiplier - 1.0) ] * 0.15**
+
+- In chases: **pressure_multiplier = clip( RRR / Season_RRR, 1.0, 2.0 )**.
+- If the required rate is at or below the tournament average, the multiplier stays at 1.0. That means `(multiplier - 1.0) = 0`. **Stat-padding in easy situations earns 0 bonus points.**
+- If the game is already lost (`RRR > 36.0`), the multiplier resets to 1.0 to prevent junk-time stat boosting.
 - In first innings, the multiplier scales based on early wickets lost relative to the over.
 
 ### 3.2 Bowlers (`bowl_pressure_impact`)
 
 A bowler under pressure usually faces two challenges: defending a low total or carrying a bowling attack when everyone else is leaking runs.
 
-$$\text{lone\_wolf} = \max\left(0, \text{team\_economy} - \text{bowler\_economy}\right)$$
-$$\text{low\_total\_defend} = \max\left(0, \text{league\_economy} - \text{defended\_rrr}\right)$$
-$$\text{bowl\_pressure\_impact} = \text{wickets} \times 26.13 \times \left(0.15 \times \text{lone\_wolf} + 0.15 \times \text{low\_total\_defend}\right)$$
+> **lone_wolf = max( 0, team_economy - bowler_economy )**  
+> **low_total_defend = max( 0, league_economy - defended_rrr )**  
+> **bowl_pressure_impact = wickets * 26.13 * ( 0.15 * lone_wolf + 0.15 * low_total_defend )**
 
-- $26.13$ is the average runs conceded per wicket across all 2022–2026 T20 games.
-- **Lone Wolf:** If your team's other bowlers go at 11.5 RPO, and you bowl 4 overs for 26 (6.5 RPO), your Lone Wolf differential is $+5.00$. You kept the team in the game.
+- **26.13** is the average runs conceded per wicket across all 2022–2026 T20 games.
+- **Lone Wolf:** If your team's other bowlers go at 11.5 RPO, and you bowl 4 overs for 26 (6.5 RPO), your Lone Wolf differential is `+5.00`. You kept the team in the game.
 - **Low Total Defense:** Defending 140 on a flat deck requires far more precision than defending 220. Bowlers who shut down chases of small totals get credited accordingly.
 
 ---
@@ -136,7 +133,7 @@ $$\text{bowl\_pressure\_impact} = \text{wickets} \times 26.13 \times \left(0.15 
 
 ## 7. Reliability & Checks
 
-1. **Split-Half Consistency ($r = 0.88$):** When splitting players' balls into odd and even matches, their pressure scores show a strong correlation ($r = 0.884$ for batters, $r = 0.867$ for bowlers). This proves pressure performance is a real, repeatable skill, not random noise.
+1. **Split-Half Consistency (r = 0.88):** When splitting players' balls into odd and even matches, their pressure scores show a strong correlation (`r = 0.884` for batters, `r = 0.867` for bowlers). This proves pressure performance is a real, repeatable skill, not random noise.
 2. **Cutoff Stability:** Changing the qualification cutoff from 30 to 100 balls does not change the top 6 in either list. The core rankings remain rock solid.
 3. **Known Limitations:** The model currently looks at the striker. If a non-striker eats dots and builds pressure, the striker shoulders the burden. Incorporating partnership run-rate dynamics is the natural next step.
 
@@ -149,4 +146,4 @@ To let the Rajasthan Royals team explore these players hands-on, I embedded this
 - **Scatter Distribution Plots:** Bivariate charts plotting pressure strike rates vs. pressure volume by nationality.
 - **Scorecard Modals:** Permanent player ranks, percentiles across all metrics, and swipe-friendly navigation for mobile review.
 
-All calculations and code can be reproduced via our script `scripts/generate_official_rankings.py` and the open-source repository at [github.com/quwrof00/ipl-statistic-engine](https://github.com/quwrof00/ipl-statistic-engine).
+All calculations and code can be reproduced via our script `scripts/generate_official_rankings.py` and the open-source repository at **[github.com/quwrof00/ipl-statistic-engine](https://github.com/quwrof00/ipl-statistic-engine)**.
