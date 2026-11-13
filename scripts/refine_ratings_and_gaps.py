@@ -332,10 +332,13 @@ print("\n[GAP 3: CLUTCH MIDDLE-DEATH FINISHER]")
 print("Targeting: Pres Death SR > 165, boundary hitting under pressure")
 print(fin_targets[['striker_name', 'nationality', 'age', 'fin_balls', 'fin_SR', 'pres_fin_balls', 'pres_fin_runs', 'pres_fin_SR', 'combined_score']].head(10).to_string(index=False))
 
-# Save the final JSON data for frontend
+# Save the final JSON data for frontend (replacing NaN with None for valid JSON)
+comb_bat_clean = comb_bat.replace({np.nan: None})
+comb_bowl_clean = comb_bowl.replace({np.nan: None})
+
 frontend_data = {
-    'batters': comb_bat.head(150).to_dict(orient='records'),
-    'bowlers': comb_bowl.head(150).to_dict(orient='records'),
+    'batters': comb_bat_clean.head(150).to_dict(orient='records'),
+    'bowlers': comb_bowl_clean.head(150).to_dict(orient='records'),
 }
 with open('ipl/public/pressure_data.json', 'w') as f:
     json.dump(frontend_data, f, indent=2)
