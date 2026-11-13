@@ -1,228 +1,152 @@
-# Rajasthan Royals — IPL 2027 Mega Auction Strategy
-## Tactical Gap Analysis & Pressure-Engine Target Recommendations
-### SupeRR Selector Season 2 — Round 1 Technical Submission
+# T20 Pressure Evaluation: Empirical Value Under Leverage (2022–2026)
+**Methodology Report & Official Top 10 — Rajasthan Royals SupeRR Selector (Round 1)**  
+*Author: Shourya (Cricket Analytics Researcher)*  
+*Prior Work:* [Viral Reddit Breakdown (30k+ Views)](https://www.reddit.com/r/ipl/comments/1uudo98/i_analyzed_every_legal_delivery_in_ipl_history_to/) • [GitHub Repository (Apex Engine)](https://github.com/quwrof00/ipl-statistic-engine)  
+*Dataset Analyzed: Official Data Pack (200,999 legal deliveries, 2022–2026 IPL & T20I matches)*  
 
 ---
 
-> **Author:** Shourya  
-> **Target Franchise:** Rajasthan Royals (RR)  
-> **Context:** IPL 2027 Mega Auction Preparation  
-> **Dataset Scope:** Official IPL 2022–2026 Ball-by-Ball (200,999 Deliveries) + Concurrent T20I Historical Records  
-> **Analytical Foundation:** QUWROF Engine (June 2026, Iterations v1–v14) & Next-Gen Dual-Criterion Pressure Index
+## 1. Introduction: Why Most Pressure Stats Lie
+
+Back in June, I posted an in-depth breakdown on Reddit: [I analyzed every legal delivery in IPL history to evaluate true season performance](https://www.reddit.com/r/ipl/comments/1uudo98/i_analyzed_every_legal_delivery_in_ipl_history_to/). It hit 30,000+ views and sparked intense debate because it addressed a glaring blind spot in standard cricket metrics: **context blindness**.
+
+When people try to measure "clutch" in cricket, they usually take a shortcut:
+$$\text{Pressure Ratio} = \frac{\text{Strike Rate under Pressure}}{\text{Baseline Strike Rate}}$$
+
+This looks neat on paper, but in reality it breaks down:
+1. **The Mediocre Batter Trap:** Take an anchor batter with an ordinary career strike rate of 105. If they bat at 125 in a tight chase, the ratio gives them a 1.19x boost (+19%). But in a modern T20 game, striking at 125 in a chase loses you the match.
+2. **The Elite Finisher Penalty:** Take a proven finisher whose career baseline is already 175. If they come out and strike at 180 under extreme pressure, their ratio is just 1.03x (+3%). 
+
+The ratio model rewards mediocrity and penalizes players who are already world-class.
+
+To fix this for the **Rajasthan Royals SupeRR Selector**, I adapted the core pressure math from my open-source [Apex Engine](https://github.com/quwrof00/ipl-statistic-engine). Instead of checking whether a player beat their own baseline, I measure **absolute value added under leverage**: what runs did they score above match expectation, and what runs did they prevent when their team was under the pump?
 
 ---
 
-## Executive Summary: War Room Brief
+## 2. Defining "Pressure" with Hard Numbers
 
-In the IPL 2026 campaign, the Rajasthan Royals posted a **9–7 record** across 16 matches, qualifying for the postseason but falling short of the ultimate prize. 
+Pressure isn't a vague feeling. It's when a match situation gets tight, error margins shrink, and the chance of losing a wicket spikes.
 
-While top-order phenomenon **Vaibhav Sooryavanshi** enjoyed an unprecedented campaign (776 runs @ 237.3 SR, 100th percentile in the QUWROF ApexScore engine) and pace spearhead **Jofra Archer** dominated (25 wickets, 99.2 percentile ApexScore, 55.9 PP impact points), RR suffered catastrophic phase-specific breakdowns that dictated all 7 of their defeats.
-
-This report conducts a rigorous post-mortem on RR's 2026 ball-by-ball performance, isolates the three structural deficiencies that cost Rajasthan the championship, and deploys our **Dual-Criterion Pressure Rating Engine (65% IPL : 35% T20I Bayesian Architecture)** to deliver high-conviction, auction-ready targets for the IPL 2027 Mega Auction.
+I combed through the 200,999 balls in the official data pack (2022–2026). Here is what the numbers actually show:
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                      RR 2026 CORE DEFICIT SUMMARY                      │
-├──────────────────────┬──────────────────────┬──────────────────────────┤
-│ METRIC PHASE         │ IN WINS (9 Matches)  │ IN LOSSES (7 Matches)    │
-├──────────────────────┼──────────────────────┼──────────────────────────┤
-│ Death Bowling Econ   │ 9.24 RPO             │ 12.30 RPO (+3.06 bleed)  │
-│ Powerplay Wickets    │ 24 Wickets (2.67/gm) │ 4 Wickets (0.57/gm)      │
-│ Powerplay Bowling ER │ 9.54 RPO             │ 11.50 RPO (+1.96 bleed)  │
-│ Middle Overs Bat SR  │ 161.9 SR             │ 142.6 SR (-19.3 deficit) │
-│ Shimron Hetmyer SR   │ 128.4 SR             │ 113.0 SR (22nd Pctile)   │
-└──────────────────────┴──────────────────────┴──────────────────────────┘
+                      Total Dataset: 200,999 Deliveries
+                                      │
+             ┌────────────────────────┴────────────────────────┐
+             ▼                                                 ▼
+     Baseline Overs                                   High-Pressure Overs
+     140,694 Balls (70%)                              60,305 Balls (30%)
+     • Wicket rate: 4.76%                             • Wicket rate: 7.65% (1.61x risk)
+     • Chase win rate: 49.9%                          • Win rate @ RRR > 10: 27.9%
+                                                      • Win rate @ RRR > 12: 14.3%
+                                                      • Overs 16-20 density: 65.0%
 ```
 
----
+### The 4 Real-World Pressure Triggers
 
-## 1. Background & Analytical Heritage (QUWROF June 2026)
-
-This submission directly builds upon **QUWROF**, an advanced composite T20 player rating system I designed and engineered from scratch in June 2026. 
-
-QUWROF evolved through 14 iterative mathematical architectures (v1 through v14), incorporating:
-- **Phase-Separated Value Over Replacement (VORP):** Independent percentile normalizations for Powerplay (overs 1–6), Middle (7–15), and Death (16–20).
-- **Match-State Context Vectors:** Quantifying leverage via `avg_rrr_faced` (for batters chasing) and `avg_rrr_defended` (for bowlers defending).
-- **Multi-Dimensional Dimensionality Reduction:** Benchmarking players via Principal Component Analysis (PCA), Mahalanobis Distance outlier detection, and Pareto frontier hypervolume maximization.
-- **Micro-Engine Calibration:** Documented in our test harness (`test_uvs_conf.py`, `test_calibrated.py`), proving that purely relative ratios inadvertently favor mediocre baselines.
-
-For this Rajasthan Royals assignment, we adapted the core QUWROF data pipeline into an auction decision engine specifically tuned to pressure resilience and tactical squad fit.
+1. **The 1.61x Wicket Risk:** In standard overs, wickets fall on **4.76%** of balls. In high-pressure situations, that jumps to **7.65%**. Batters are 61% more likely to get out on any given delivery.
+2. **The RRR Cliff:** Chasing teams win roughly half their games (49.9%) at normal scoring rates. Once the Required Run Rate climbs over **10.0 RPO**, the win rate drops to **27.9%**. Above **12.0 RPO**, it tanks to **14.3%**.
+3. **The Death Overs Squeeze:** 65.0% of all balls bowled in overs 16–20 (28,900 of 44,454) qualify as high-pressure deliveries.
+4. **First-Innings Collapses:** Pressure isn't just about chasing. When a team loses 3 or more wickets in the powerplay, the incoming batter faces massive leverage to rebuild the innings without killing the run rate.
 
 ---
 
-## 2. Rajasthan Royals IPL 2026 Squad Audit & Defeat Anatomy
+## 3. How the Engine Scores Players
 
-From the official IPL 2026 ball-by-ball dataset (17,527 deliveries across 10 franchises), Rajasthan Royals contested 16 fixtures. A deep-dive query into the QUWROF 2026 ratings database (`data_v2.json`) and delivery-level state reconstruction reveals extreme polarization within the squad:
+The math runs ball-by-ball. No arbitrary black boxes.
 
-### 2.1 The Apex vs The Floor (QUWROF Ratings Breakdown)
+### 3.1 Batters (`bat_chase_impact`)
 
-| Player Name | Role | Matches | Primary Output | QUWROF / Apex Pctile | Tactical Observation |
-|---|---|:---:|:---|:---:|---|
-| **Vaibhav Sooryavanshi** | LHB Opener | 16 | 776 Runs @ 237.3 SR | **100.0%** | Historic breakout season; league-leading powerplay destruction. |
-| **Jofra Archer** | Fast Bowler | 16 | 25 Wkts, Econ 9.32 | **99.2%** | Frontline bowler capable of bowling both PP (55.9 impact) and Death (24.7 impact). |
-| **Ravindra Jadeja** | Spin All-Rounder | 13 | 266 Runs, 10 Wkts | **87.6%** | Exceptional middle-overs economy (8.39 RPO); modest finishing SR (135.7). |
-| **Dhruv Jurel** | WK / Middle | 16 | 515 Runs @ 154.7 SR | **85.7%** | Solid anchor/accelerator; 139.6 SR under extreme pressure. |
-| **Donovan Ferreira** | Finisher / All-Rounder | 14 | 317 Runs @ 179.1 SR | **83.9%** | Elite death finisher (221.7 death SR, 233.3 pressure death SR), but lacked support. |
-| **Nandre Burger** | Left-Arm Fast | 13 | 14 Wkts, Econ 10.11 | **83.6%** | High pace, but conceded 10.69 RPO across phases; inconsistent length. |
-| **Ravi Bishnoi** | Leg Spinner | 9 | 11 Wkts, Econ 9.88 | **79.4%** | Match-winner on turning wickets, but underutilized (only 9 matches played). |
-| **Riyan Parag** | Batter / Off-Spin | 14 | 309 Runs @ 157.7 SR | **74.0%** | Strong middle-overs platform; limited lower-order finishing punch. |
-| **Yashasvi Jaiswal** | Opener | 16 | 427 Runs @ 152.5 SR | **71.7%** | Steady production, but lower SR than previous peak cycles. |
-| **Sandeep Sharma** | Seamer | 6 | 5 Wkts, Econ 11.39 | **56.8%** | Sharp drop-off in death control (13.30 death economy). |
-| **Shimron Hetmyer** | Finisher | 8 | 78 Runs @ 113.0 SR | **22.1%** | Severe slump; 0 batting impact points; 100.0 SR under pressure. |
-| **Tushar Deshpande** | Seamer | 7 | 4 Wkts, Econ 11.96 | **22.1%** | 0 bowling impact points; leaked 11.25 RPO at the death. |
-| **Dasun Shanaka** | Pace All-Rounder | 6 | 63 Runs @ 137.0 SR | **22.1%** | 1 wkt in 6 games; failed to bridge 6th bowler gap. |
+For every ball a batter faces during a pressure situation:
+$$\text{bat\_chase\_impact} = \sum \left[ \text{runs} \times (\text{pressure\_multiplier} - 1.0) \right] \times 0.15$$
 
-### 2.2 The Anatomy of RR's Defeats (Phase-by-Phase Breakdown)
+- In chases, $\text{pressure\_multiplier} = \operatorname{clip}\left(\frac{\text{RRR}}{\text{Season RRR}}, 1.0, 2.0\right)$.
+- If the required rate is at or below the tournament average, the multiplier stays at $1.0$. That means $(\text{multiplier} - 1.0) = 0$. **Stat-padding in easy situations earns 0 bonus points.**
+- If the game is already lost ($\text{RRR} > 36.0$), the multiplier resets to $1.0$ to prevent junk-time stat boosting.
+- In first innings, the multiplier scales based on early wickets lost relative to the over.
 
-Extracting all 16 matches and splitting deliveries by outcome reveals three structural failure points:
+### 3.2 Bowlers (`bowl_pressure_impact`)
 
-```
-=== RR PHASE-WISE BOWLING: WINS VS LOSSES ===
-[WINS (9 Matches)]
-  Powerplay (Overs 1-6)  : 9.54 Econ  | 24 Wickets  | 4.0 overs/wkt (Dominant)
-  Middle    (Overs 7-15) : 9.40 Econ  | 30 Wickets  | Regular breakthroughs
-  Death     (Overs 16-20): 9.24 Econ  | 19 Wickets  | Locked down final overs
+A bowler under pressure usually faces two challenges: defending a low total or carrying a bowling attack when everyone else is leaking runs.
 
-[LOSSES (7 Matches)]
-  Powerplay (Overs 1-6)  : 11.50 Econ |  4 Wickets  | 10.5 overs/wkt (Complete Toothlessness)
-  Middle    (Overs 7-15) : 9.81 Econ  | 16 Wickets  | Opponents consolidated
-  Death     (Overs 16-20): 12.30 Econ | 10 Wickets  | Catastrophic run hemorrhage
-```
+$$\text{lone\_wolf} = \max\left(0, \text{team\_economy} - \text{bowler\_economy}\right)$$
+$$\text{low\_total\_defend} = \max\left(0, \text{league\_economy} - \text{defended\_rrr}\right)$$
+$$\text{bowl\_pressure\_impact} = \text{wickets} \times 26.13 \times \left(0.15 \times \text{lone\_wolf} + 0.15 \times \text{low\_total\_defend}\right)$$
 
-#### Why RR Lost in 2026:
-1. **The Death Bowling Void (The "Archer Isolation" Problem):**  
-   Archer bowled 102 death balls at 9.06 economy with 9 wickets. But when opponents navigated Archer or attacked the other end, RR had no viable option:
-   - Sandeep Sharma conceded **13.30 RPO** at the death.
-   - Tushar Deshpande conceded **11.25 RPO** at the death.
-   - Adam Milne conceded **12.75 RPO** at the death.
-   - In 7 losses, RR conceded **12.30 runs per over** in overs 16–20.
-2. **Powerplay Wicket Drought:**  
-   In 9 wins, RR took **24 Powerplay wickets** (2.67 per game) choking the opposition early. In 7 losses, RR took **just 4 Powerplay wickets in total** (0.57 per game, or less than 1 wicket every two matches!), letting opposition openers score at 11.50 RPO uncontested.
-3. **Finishing Collapse & The Hetmyer Falloff:**  
-   When Donovan Ferreira was dismissed, RR had no secondary closer. Shimron Hetmyer scored 78 runs off 69 balls (SR 113.0) and managed only 100.0 SR in pressure situations. In losses, RR's Middle Overs run rate collapsed to 142.6 SR.
+- $26.13$ is the average runs conceded per wicket across all 2022–2026 T20 games.
+- **Lone Wolf:** If your team's other bowlers go at 11.5 RPO, and you bowl 4 overs for 26 (6.5 RPO), your Lone Wolf differential is $+5.00$. You kept the team in the game.
+- **Low Total Defense:** Defending 140 on a flat deck requires far more precision than defending 220. Bowlers who shut down chases of small totals get credited accordingly.
 
 ---
 
-## 3. The Dual-Criterion Pressure Index Methodology
+## 4. Fair Comparisons & Sample Cutoffs
 
-### 3.1 Addressing the "Mediocre Baseline" Fallacy
-A common pitfall in ratio-based metrics ($M_{\text{pressure}} / M_{\text{baseline}}$) is that below-average players who maintain their mediocre performance receive higher marks than elite players whose ceiling is already world-class. 
-
-To ensure our rankings produce franchise-viable, battle-tested options, our rating engine adopts a **Dual-Criterion Blended Model**:
-- **50% Normalized Absolute Output:** Performance benchmarked against the 85th/90th percentile of all high-pressure deliveries.
-- **50% Relative Maintenance:** Retention of efficiency relative to the player's personal baseline.
-
-### 3.2 Mathematical Formulations
-
-#### Batter Pressure Rating (BPR):
-$$\text{BPR} = 0.40 \cdot \left(\frac{\text{SR}_{\text{pres}}}{\text{P85}_{\text{pres\_SR}}}\right) + 0.35 \cdot \left(\frac{\text{SR}_{\text{pres}}}{\text{SR}_{\text{base}}}\right) + 0.15 \cdot \text{clip}\left(\frac{\text{Avg}_{\text{pres}}}{\text{Avg}_{\text{base}}}, 0.5, 2.0\right) - 0.20 \cdot (\Delta\text{Dot\%})$$
-
-#### Bowler Pressure Rating (BowPR):
-$$\text{BowPR} = 0.40 \cdot \text{clip}\left(\frac{\text{P15}_{\text{pres\_econ}}}{\text{Econ}_{\text{pres}}}, 0.5, 2.0\right) + 0.30 \cdot \text{clip}\left(\frac{\text{Econ}_{\text{base}}}{\text{Econ}_{\text{pres}}}, 0.5, 2.0\right) + 0.20 \cdot \left(\frac{\text{WktRate}_{\text{pres}}}{0.80}\right) + 0.10 \cdot (1.0 + \Delta\text{Dot\%})$$
-
-### 3.3 The 65:35 IPL-Weighted Bayesian Architecture
-As established in Section 1, talent density and subcontinental ground dimensions dictate that IPL pressure deliveries carry higher predictive validity for future IPL success than international bilaterals against Associate or rotating squads.
-
-$$\text{Combined Score} = 0.65 \cdot \text{Rating}_{\text{IPL}} + 0.35 \cdot \text{Rating}_{\text{T20I}}$$
-
-Single-format players are regressed toward the baseline neutral anchor ($1.00$) via Bayesian shrinkage:
-$$\text{Shrinkage Factor } k = \min\left(\frac{N_{\text{pressure\_balls}}}{120}, 1.0\right)$$
+- **50-Ball Threshold:** To be eligible for the official Top 10, players must have faced or bowled at least **50 high-pressure balls**. This eliminates one-match flukes (like a tailender slogging 25 off 9 balls once) while keeping genuine specialists.
+- **Tournament Normalization:** IPL 2024 was a run-fest (8.92 league RPO). International T20 World Cups were much lower-scoring (7.60 RPO). We compare every ball against that tournament's baseline RRR, so 10 runs on a tricky pitch in New York are weighted fairly against 16 runs at the Wankhede.
 
 ---
 
-## 4. Official Top 10 Pressure Rankings (IPL-Eligible)
+## 5. Official Top 10: Batters Under Pressure
 
-*Excluding Pakistani players pursuant to IPL auction regulations (available via analytical dashboard toggle).*
+*Ranked strictly by the 2022–2026 data pack using the Apex Engine.*
 
-### 4.1 Top 10 Batters Under Pressure
+| Rank | Player | Pressure Balls | Pressure Runs | Pressure SR | Base SR | SR Lift (Δ) | Avg | Score |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | **Namboori Tilak Varma** | 1,336 | 1,946 | 145.66 | 143.44 | **+2.22** | 38.92 | **106.03** |
+| **2** | **Suryakumar Yadav** | 1,441 | 2,290 | 158.92 | 166.97 | -8.05 | 40.89 | **101.20** |
+| **3** | **David Miller** | 935 | 1,395 | 149.20 | 149.76 | -0.57 | 39.86 | **90.05** |
+| **4** | **Rovman Powell** | 1,077 | 1,559 | 144.75 | 147.14 | -2.38 | 27.84 | **85.50** |
+| **5** | **Nicholas Pooran** | 1,157 | 1,707 | 147.54 | 157.26 | -9.72 | 30.48 | **77.04** |
+| **6** | **Tristan Stubbs** | 672 | 982 | 146.13 | 150.19 | -4.05 | 30.69 | **74.19** |
+| **7** | **Jos Buttler** | 1,185 | 1,840 | 155.27 | 155.89 | -0.61 | 36.08 | **74.08** |
+| **8** | **Aiden Markram** | 896 | 1,260 | 140.62 | 143.50 | -2.87 | 27.39 | **70.55** |
+| **9** | **Tim David** | 700 | 1,197 | 171.00 | 179.26 | -8.26 | 39.90 | **70.22** |
+| **10** | **Rinku Singh** | 741 | 1,083 | 146.15 | 153.52 | -7.37 | **49.23** | **66.60** |
 
-| Rank | Player | Nationality | Age | Combined Score | Total Pres Balls | Pressure SR | Baseline SR | Tactical Role |
-|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---|
-| **1** | **Tom Banton** | England | 28 | **1.1194** | 92 | 184.8 | 159.5 | Dynamic Top/Middle Enforcer |
-| **2** | **Reeza Hendricks** | South Africa | 36 | **1.1001** | 294 | 179.3 | 146.8 | Composed Anchor/Pacer |
-| **3** | **Cooper Connolly** | Australia | 23 | **1.0514** | 116 | 182.8 | 162.9 | Middle-Death Clutch Finisher |
-| **4** | **Liton Das** | Bangladesh | 32 | **1.0449** | 124 | 170.2 | 133.0 | 360-Degree WK-Batter |
-| **5** | **Naman Dhir** | India | 27 | **1.0362** | 209 | 198.7 | 164.4 | High-Velocity Indian Middle Finisher |
-| **6** | **Donovan Ferreira** | South Africa | 28 | **1.0328** | 158 | 206.4 | 170.7 | Pure Death Destroyer (RR Incumbent) |
-| **7** | **Andrew Balbirnie** | Ireland | 36 | **1.0309** | 130 | 150.8 | 119.9 | Experienced Top-Order Stabilizer |
-| **8** | **Shashank Singh** | India | 34 | **1.0269** | 343 | 185.1 | 161.6 | Proven Domestic Chase Specialist |
-| **9** | **Ambati Rayudu** | India | 40 | **1.0145** | 75 | 172.0 | 128.3 | Seasoned Impact Veteran |
-| **10** | **Mayank Agarwal** | India | 35 | **1.0045** | 87 | 139.1 | 127.0 | Top-Order Pace Accumulator |
+### Key Takeaways
 
-### 4.2 Top 10 Bowlers Under Pressure
-
-| Rank | Player | Nationality | Age | Combined Score | Total Pres Balls | Pres Econ | Base Econ | Pres Wkts | Tactical Role |
-|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---|
-| **1** | **Mayank Yadav** | India | 24 | **1.3531** | 203 | 6.81 | 10.23 | 6 | 150+ km/h Middle/Death Enforcer |
-| **2** | **Jamie Overton** | England | 32 | **1.3119** | 173 | 7.58 | 9.94 | 6 | Heavy-Ball Death Seamer & Hitter |
-| **3** | **Sakib Hussain** | India | 22 | **1.3108** | 132 | 7.82 | 9.46 | 11 | Uncapped Indian Yorker Specialist |
-| **4** | **Matthew Humphreys** | Ireland | 23 | **1.2843** | 91 | 5.74 | 7.20 | 12 | Precision Left-Arm Finger Spin |
-| **5** | **Akeal Hosein** | West Indies | 33 | **1.2825** | 303 | 6.67 | 8.30 | 5 | PP Powerplay / Middle Arm-Ball Spin |
-| **6** | **Mitchell Santner** | New Zealand | 34 | **1.2592** | 511 | 7.39 | 7.73 | 9 | World-Class Defensive Choke Spin |
-| **7** | **Gerald Coetzee** | South Africa | 26 | **1.2478** | 153 | 9.67 | 10.73 | 9 | High-Pace Middle Overs Enforcer |
-| **8** | **Sunil Narine** | West Indies | 37 | **1.2374** | 420 | 7.03 | 7.01 | 24 | Universal All-Phase Mystery Spinner |
-| **9** | **Tabraiz Shamsi** | South Africa | 36 | **1.2222** | 101 | 7.43 | 9.64 | 11 | Wrist-Spin Wicket-Taker |
-| **10** | **Jasprit Bumrah** | India | 33 | **1.2027** | 606 | 7.76 | 7.23 | 30 | Gold-Standard All-Phase Bowler |
+- **Tilak Varma takes #1:** He is the only batter in the top 5 whose strike rate goes **up** under pressure (+2.22 SR lift), while maintaining a 38.92 average across 1,336 high-leverage balls. He anchors early collapses and still accelerates in tough chases.
+- **Suryakumar Yadav at #2:** SKY put up an unmatched 2,290 runs under pressure with a 158.92 strike rate. The sheer volume of matches he turned around puts him right at the top.
+- **David Miller (#3) & Rovman Powell (#4):** Miller loses virtually nothing under pressure (149.20 vs 149.76 baseline). Powell handles high entry-point pressure and clears boundaries when teams have no margin for error.
 
 ---
 
-## 5. RR Auction War Room Target Blueprint (Plugging the 3 Gaps)
+## 6. Official Top 10: Bowlers Under Pressure
 
-By cross-referencing RR's phase vulnerabilities with delivery-level phase performance across the entire 200,999-ball dataset, we define the three primary acquisition mandates for the Rajasthan Royals at the IPL 2027 Mega Auction:
+| Rank | Player | Pressure Balls | Wickets | Pressure Econ | Base Econ | Lone Wolf Mult | Score |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | **Wanindu Hasaranga** | 1,256 | 92 | 7.89 | 8.06 | +1.24 | **934.46** |
+| **2** | **Rashid Khan** | 1,733 | 109 | 7.13 | 7.57 | +1.48 | **924.61** |
+| **3** | **Axar Patel** | 1,760 | 85 | 7.94 | 7.99 | +1.54 | **779.35** |
+| **4** | **Jasprit Bumrah** | 964 | 61 | **7.32** | 7.45 | **+1.96** | **720.33** |
+| **5** | **Arshdeep Singh** | 1,927 | **138** | 9.18 | 9.30 | +0.78 | **643.90** |
+| **6** | **Varun Chakravarthy** | 1,422 | 94 | 8.12 | 8.14 | +1.18 | **639.95** |
+| **7** | **Blessing Muzarabani** | 373 | 23 | 7.87 | 7.71 | +1.22 | **603.81** |
+| **8** | **Kuldeep Yadav** | 1,278 | 84 | 7.51 | 8.08 | +1.29 | **601.50** |
+| **9** | **Sunil Narine** | 905 | 45 | **6.60** | 7.01 | **+2.21** | **588.92** |
+| **10** | **Bhuvneshwar Kumar** | 1,365 | 78 | 8.50 | 8.46 | +1.03 | **586.51** |
 
-### GAP 1: The Death-Over Partner for Jofra Archer
-*Deficit:* RR leaked 12.30 RPO in the death overs in defeats when Sandeep Sharma and Deshpande broke down.
+### Key Takeaways
 
-| Target Player | Role & Nationality | Age | Pressure Death Balls | Pressure Death Econ | BowPR Score | Tactical War Room Rationale |
-|---|---|:---:|:---:|:---:|:---:|---|
-| **Jamie Overton** | Fast Bowler (ENG) | 32 | 48 | **6.62 RPO** | **1.3119** | **Primary Overseas Target:** Tall, heavy hit-the-deck bowler. Executes wide yorkers and hard lengths at 145 km/h. Conceded only 6.62 RPO in pressure death overs while striking regularly. Solves the death leakage immediately alongside Archer. |
-| **Sakib Hussain** | Fast Bowler (IND) | 22 | 53 | **7.70 RPO** | **1.3108** | **Primary Indian Diamond (Purse Saver):** Uncapped Indian right-arm quick with rapid arm action and toe-crusher yorkers. 132 pressure balls, 11 pressure wickets, 7.70 death econ under pressure. Allows overseas slot flexibility. |
-| **Maheesh Theekshana** | Mystery Spinner (SL) | 26 | 63 | **6.00 RPO** | **1.1779** | **Jaipur Surface Choke:** SMS Jaipur's abrasive surface rewards mystery spinners bowling carrom balls and yorkers in overs 17–19. Theekshana boasts an extraordinary 6.00 RPO under death pressure. |
-
-### GAP 2: The Powerplay Breakthrough Seamer
-*Deficit:* In 7 losses, RR managed only 4 wickets across 42 powerplay overs (0.57 wkts/match) while conceding 11.50 RPO.
-
-| Target Player | Role & Nationality | Age | PP Balls Bowled | PP Wickets | PP Economy | Tactical War Room Rationale |
-|---|---|:---:|:---:|:---:|:---:|---|
-| **Mohammed Siraj** | Seamer (IND) | 32 | 1,057 | **45** | **7.98 RPO** | **Elite Indian Frontline Target:** 45 Powerplay wickets at an economy under 8.0. Unrivalled seam movement and aggression to blow open opposition top orders in the first 4 overs. |
-| **Khaleel Ahmed** | Left-Arm Fast (IND) | 29 | 702 | **26** | **7.79 RPO** | **Left-Arm Angle & Local Conditions:** Native Rajasthan knowledge; left-arm angle creates natural shape back into right-handers. 7.79 PP economy across 702 balls. |
-| **Arshdeep Singh** | Left-Arm Fast (IND) | 27 | 762 | **31** | **8.47 RPO** | **Dual Phase Weapon:** 31 PP wickets with lethal swing; bridges both Gap 1 and Gap 2 by bowling overs 1, 3, 18, and 20. |
-
-### GAP 3: The Clutch Middle-Overs Enforcer & Finisher
-*Deficit:* Outside Donovan Ferreira, RR's middle/death batting collapsed in chases (Hetmyer SR 113.0, Dubey SR 139.6).
-
-| Target Player | Role & Nationality | Age | Pressure Fin Balls | Pressure Fin SR | Combined BPR | Tactical War Room Rationale |
-|---|---|:---:|:---:|:---:|:---:|---|
-| **Naman Dhir** | Middle Finisher (IND) | 27 | 105 | **209.5 SR** | **1.0362** | **Top Indian Target:** Striking at 209.5 in the death overs under pressure. Supreme 360-degree range against high pace, while attacking spin in the middle overs (198.7 overall pressure SR). |
-| **Cooper Connolly** | Finisher / All-Rounder (AUS) | 23 | 39 | **212.8 SR** | **1.0514** | **Direct Shimron Hetmyer Replacement:** Left-handed middle-order finisher with ice-cold temperament. Strikes at 212.8 at the death under pressure and bowls handy left-arm spin. |
-| **Shashank Singh** | Finisher (IND) | 34 | 148 | **185.1 SR** | **1.0269** | **Proven Chase Master:** 343 career pressure balls; has engineered multiple improbable 200+ run chases in the IPL. Unflappable under steep required rates. |
+- **Hasaranga & Rashid Khan (1 & 2):** Hasaranga edges Rashid slightly because he frequently defended modest Sri Lankan totals in low-scoring thrillers. Rashid took an incredible 109 pressure wickets while conceding just 7.13 RPO.
+- **Sunil Narine (#9) & Jasprit Bumrah (#4):** Narine holds the highest Lone Wolf multiplier (+2.21) in the world. He bowls at 6.60 RPO in phases where his teammates go at nearly 9. Bumrah sits at +1.96: teams simply refuse to take risks against him, forcing wickets at the other end.
+- **Blessing Muzarabani (#7):** The breakout find of the dataset. Bowling under-resourced for Zimbabwe, his ability to defend low totals against top teams (+2.05 defense multiplier) dragged him straight into the top 10 on merit, not hype.
 
 ---
 
-## 6. Venue Synergy: Sawai Mansingh Stadium (Jaipur) Fit
+## 7. Reliability & Checks
 
-A vital war-room consideration is ground geography. Sawai Mansingh Stadium (SMS) in Jaipur features:
-1. **Large Square Dimensions (75m–80m):** Unlike Wankhede or Chinnaswamy, mis-hits do not clear the rope. Bowlers who can bowl into the pitch with steep bounce (Jamie Overton, Mayank Yadav) or generate grip (Maheesh Theekshana) force mishits to deep midwicket and square leg.
-2. **Abrasive Soil & Dew Factor:** Early matches grip for spin; 2nd innings games frequently feature wet balls. Bowlers like Overton and Sakib Hussain who rely on wide yorkers rather than finger seam grip minimize dew penalties.
-3. **Running Between Wickets:** Cooper Connolly and Naman Dhir possess elite athletic profiles to convert ones into twos on Jaipur's cavernous outfield before launching at the death.
+1. **Split-Half Consistency ($r = 0.88$):** When splitting players' balls into odd and even matches, their pressure scores show a strong correlation ($r = 0.884$ for batters, $r = 0.867$ for bowlers). This proves pressure performance is a real, repeatable skill, not random noise.
+2. **Cutoff Stability:** Changing the qualification cutoff from 30 to 100 balls does not change the top 6 in either list. The core rankings remain rock solid.
+3. **Known Limitations:** The model currently looks at the striker. If a non-striker eats dots and builds pressure, the striker shoulders the burden. Incorporating partnership run-rate dynamics is the natural next step.
 
 ---
 
-## 7. Conclusion & Recommended Starting XI (IPL 2027)
+## 8. Interactive Platform
 
-With these targeted acquisitions, Rajasthan Royals can field an impeccably balanced, pressure-resilient XI:
+To let the Rajasthan Royals team explore these players hands-on, I embedded this entire engine into the interactive Next.js application at `/supe-rr`:
+- **Head-to-Head Compare:** Radar charts comparing up to 4 players across 5 normalized dimensions.
+- **Scatter Distribution Plots:** Bivariate charts plotting pressure strike rates vs. pressure volume by nationality.
+- **Scorecard Modals:** Permanent player ranks, percentiles across all metrics, and swipe-friendly navigation for mobile review.
 
-1. **Yashasvi Jaiswal** (IND) — Aggressive Opening Platform
-2. **Vaibhav Sooryavanshi** (IND) — 100th Percentile Powerplay Demolisher
-3. **Sanju Samson** (IND, Capt / WK) — Middle Overs Anchor & Spin Dominator
-4. **Riyan Parag** (IND) — Middle Overs Consolidator & Off-Spin
-5. **Cooper Connolly / Tom Banton** (Overseas) ✈️ — Clutch Middle-Death Finisher *(Plugs Gap 3)*
-6. **Donovan Ferreira** (Overseas) ✈️ — Proven Incumbent Power Finisher (221.7 Death SR)
-7. **Ravindra Jadeja / Naman Dhir** (IND) — Dynamic 360-Degree Finisher & Bowling All-Rounder
-8. **Jamie Overton** (Overseas) ✈️ — 145 km/h Death Lockdown Seamer *(Plugs Gap 1)*
-9. **Jofra Archer** (Overseas) ✈️ — Frontline Pace Spearhead
-10. **Mohammed Siraj / Khaleel Ahmed** (IND) — Powerplay Strike Seamer *(Plugs Gap 2)*
-11. **Ravi Bishnoi** (IND) — Mystery / Leg-Spin Wicket-Taker  
-*Impact Player Option:* **Sakib Hussain** (Death Yorker Specialist) or **Dhruv Jurel** (Batting Depth)
-
-By executing on this data-backed blueprint, the Rajasthan Royals will directly eliminate the 12.30 death economy leak and powerplay wicket drought that cost them IPL 2026, establishing the most clutch, championship-ready roster in franchise history.
+All calculations and code can be reproduced via our script `scripts/generate_official_rankings.py` and the open-source repository at [github.com/quwrof00/ipl-statistic-engine](https://github.com/quwrof00/ipl-statistic-engine).
