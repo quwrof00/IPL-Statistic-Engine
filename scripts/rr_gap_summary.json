@@ -1,0 +1,191 @@
+{
+  "squad": [
+    {
+      "player_id": 152,
+      "player_name": "Ravindra Jadeja"
+    },
+    {
+      "player_id": 1487,
+      "player_name": "Adam Milne"
+    },
+    {
+      "player_id": 2411,
+      "player_name": "Sandeep Sharma"
+    },
+    {
+      "player_id": 2436,
+      "player_name": "Dasun Shanaka"
+    },
+    {
+      "player_id": 3297,
+      "player_name": "Shimron Hetmyer"
+    },
+    {
+      "player_id": 3298,
+      "player_name": "Jofra Archer"
+    },
+    {
+      "player_id": 4409,
+      "player_name": "Sam Curran"
+    },
+    {
+      "player_id": 6423,
+      "player_name": "Riyan Parag"
+    },
+    {
+      "player_id": 6806,
+      "player_name": "Tushar Deshpande"
+    },
+    {
+      "player_id": 6819,
+      "player_name": "Yashasvi Jaiswal"
+    },
+    {
+      "player_id": 7260,
+      "player_name": "Dhruv Jurel"
+    },
+    {
+      "player_id": 7269,
+      "player_name": "Sushant Mishra"
+    },
+    {
+      "player_id": 7312,
+      "player_name": "Nandre Burger"
+    },
+    {
+      "player_id": 7503,
+      "player_name": "Ravi Bishnoi"
+    },
+    {
+      "player_id": 7545,
+      "player_name": "Kuldeep Sen"
+    },
+    {
+      "player_id": 8182,
+      "player_name": "Donovan Ferreira"
+    },
+    {
+      "player_id": 8580,
+      "player_name": "Yudhvir Singh"
+    },
+    {
+      "player_id": 25139,
+      "player_name": "Shubham Dubey"
+    },
+    {
+      "player_id": 26663,
+      "player_name": "Kwena Maphaka"
+    },
+    {
+      "player_id": 41503,
+      "player_name": "Yash Punja"
+    },
+    {
+      "player_id": 43798,
+      "player_name": "Lhuan Pretorius"
+    },
+    {
+      "player_id": 43965,
+      "player_name": "Emanjot Singh Chahal"
+    },
+    {
+      "player_id": 47523,
+      "player_name": "Aman Rao Perala"
+    },
+    {
+      "player_id": 48557,
+      "player_name": "Vignesh Puthur"
+    },
+    {
+      "player_id": 50284,
+      "player_name": "Vaibhav Sooryavanshi"
+    },
+    {
+      "player_id": 60700,
+      "player_name": "Ravi Singh"
+    },
+    {
+      "player_id": 67036,
+      "player_name": "Brijesh Sharma"
+    }
+  ],
+  "record": {
+    "matches": 16,
+    "wins": 9,
+    "losses": 7
+  },
+  "phase_batting": {
+    "Powerplay": {
+      "balls": 576,
+      "runs": 1079,
+      "wickets": 24,
+      "SR": 187.3,
+      "dot_pct": 42.0,
+      "boundary_pct": 33.3
+    },
+    "Middle": {
+      "balls": 824,
+      "runs": 1261,
+      "wickets": 41,
+      "SR": 153.0,
+      "dot_pct": 31.7,
+      "boundary_pct": 20.4
+    },
+    "Death": {
+      "balls": 373,
+      "runs": 611,
+      "wickets": 34,
+      "SR": 163.8,
+      "dot_pct": 31.4,
+      "boundary_pct": 20.6
+    }
+  },
+  "phase_bowling": {
+    "Powerplay": {
+      "balls": 577,
+      "runs_conceded": 1000,
+      "wickets": 28,
+      "econ": 10.4,
+      "dot_pct": 42.6,
+      "wkt_per_6": 0.29
+    },
+    "Middle": {
+      "balls": 840,
+      "runs_conceded": 1342,
+      "wickets": 46,
+      "econ": 9.59,
+      "dot_pct": 27.1,
+      "wkt_per_6": 0.33
+    },
+    "Death": {
+      "balls": 407,
+      "runs_conceded": 720,
+      "wickets": 29,
+      "econ": 10.61,
+      "dot_pct": 32.2,
+      "wkt_per_6": 0.43
+    }
+  },
+  "win_bat_phase": {
+    "Powerplay": {
+      "SR": 0
+    },
+    "Middle": {
+      "SR": 0
+    },
+    "Death": {
+      "SR": 0
+    }
+  },
+  "loss_bat_phase": {
+    "Powerplay": {
+      "SR": 0
+    },
+    "Middle": {
+      "SR": 0
+    },
+    "Death": {
+      "SR": 0
+    }
+  }
+}

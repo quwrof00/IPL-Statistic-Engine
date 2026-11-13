@@ -1,0 +1,136 @@
+"""
+Generates rich rr_war_room_data.json for the dedicated Rajasthan Royals War Room App.
+"""
+
+import json
+
+data = {
+    "metadata": {
+        "title": "SupeRR Selector 2027: Rajasthan Royals War Room & Pressure Analytics Engine",
+        "author": "Shourya",
+        "season_target": "IPL 2027 Mega Auction",
+        "dataset_scope": "Official IPL 2022-2026 Ball-by-Ball (200,999 Deliveries) + T20I Historical Records",
+        "heritage": "Evolved from QUWROF June 2026 Engine (Iterations v1-v14)"
+    },
+    "audit_2026": {
+        "record": { "matches": 16, "wins": 9, "losses": 7, "finish": "Playoff Qualifier" },
+        "phase_comparison": {
+            "bowling": [
+                { "phase": "Powerplay (Overs 1-6)", "win_econ": 9.54, "loss_econ": 11.50, "win_wkts": 24, "loss_wkts": 4, "delta_econ": "+1.96", "verdict": "Catastrophic wicket drought (0.57 wkts/match in losses)" },
+                { "phase": "Middle (Overs 7-15)", "win_econ": 9.40, "loss_econ": 9.81, "win_wkts": 30, "loss_wkts": 16, "delta_econ": "+0.41", "verdict": "Opponents consolidated easily without pressure" },
+                { "phase": "Death (Overs 16-20)", "win_econ": 9.24, "loss_econ": 12.30, "win_wkts": 19, "loss_wkts": 10, "delta_econ": "+3.06", "verdict": "Fatal run hemorrhage when Archer bowled out" }
+            ],
+            "batting": [
+                { "phase": "Powerplay (Overs 1-6)", "win_sr": 196.9, "loss_sr": 175.0, "delta_sr": "-21.9", "verdict": "Sooryavanshi provided intent, but early wickets curbed momentum" },
+                { "phase": "Middle (Overs 7-15)", "win_sr": 161.9, "loss_sr": 142.6, "delta_sr": "-19.3", "verdict": "Fatal middle-overs slowdown during chases" },
+                { "phase": "Death (Overs 16-20)", "win_sr": 168.9, "loss_sr": 158.5, "delta_sr": "-10.4", "verdict": "Ferreira isolated; Hetmyer (113 SR) and Dubey (139 SR) stalled" }
+            ]
+        },
+        "squad_apex_ratings": [
+            { "name": "Vaibhav Sooryavanshi", "role": "LHB Opener", "runs": 776, "sr": 237.3, "wkts": 0, "econ": 0.0, "quwrof_pctile": 100.0, "notes": "Unprecedented breakout season; historic powerplay dominance." },
+            { "name": "Jofra Archer", "role": "Fast Bowler", "runs": 64, "sr": 136.2, "wkts": 25, "econ": 9.32, "quwrof_pctile": 99.2, "notes": "Carried the entire pace attack; high PP & Death impact." },
+            { "name": "Ravindra Jadeja", "role": "Spin All-Rounder", "runs": 266, "sr": 135.0, "wkts": 10, "econ": 8.39, "quwrof_pctile": 87.6, "notes": "Exceptional middle-overs choke; modest finishing boundary rate." },
+            { "name": "Dhruv Jurel", "role": "WK / Middle", "runs": 515, "sr": 154.7, "wkts": 0, "econ": 0.0, "quwrof_pctile": 85.7, "notes": "Solid anchor/accelerator; 139.6 SR under extreme pressure." },
+            { "name": "Donovan Ferreira", "role": "Finisher / All-Rounder", "runs": 317, "sr": 179.1, "wkts": 1, "econ": 13.67, "quwrof_pctile": 83.9, "notes": "Elite death specialist (221.7 Death SR), but lacked support." },
+            { "name": "Nandre Burger", "role": "Left-Arm Fast", "runs": 14, "sr": 155.6, "wkts": 14, "econ": 10.11, "quwrof_pctile": 83.6, "notes": "High pace, but leaked 10.69 RPO across phases." },
+            { "name": "Ravi Bishnoi", "role": "Leg Spinner", "runs": 0, "sr": 0.0, "wkts": 11, "econ": 9.88, "quwrof_pctile": 79.4, "notes": "Match-winner on turning tracks; underutilized (9 games)." },
+            { "name": "Riyan Parag", "role": "Batter / Off-Spin", "runs": 309, "sr": 157.7, "wkts": 2, "econ": 9.50, "quwrof_pctile": 74.0, "notes": "Solid middle platform; limited lower-order boundary burst." },
+            { "name": "Yashasvi Jaiswal", "role": "Opener", "runs": 427, "sr": 152.5, "wkts": 0, "econ": 0.0, "quwrof_pctile": 71.7, "notes": "Reliable volume; slightly below previous peak strike rate." },
+            { "name": "Sandeep Sharma", "role": "Seamer", "runs": 0, "sr": 0.0, "wkts": 5, "econ": 11.39, "quwrof_pctile": 56.8, "notes": "Major loss of death control (13.30 death economy)." },
+            { "name": "Shimron Hetmyer", "role": "Finisher", "runs": 78, "sr": 113.0, "wkts": 0, "econ": 0.0, "quwrof_pctile": 22.1, "notes": "Slump; 0 bat impact points; 100.0 pressure SR." },
+            { "name": "Tushar Deshpande", "role": "Seamer", "runs": 26, "sr": 185.7, "wkts": 4, "econ": 11.96, "quwrof_pctile": 22.1, "notes": "Blew hot and cold; conceded 11.25 RPO at the death." },
+            { "name": "Shubham Dubey", "role": "Middle Order", "runs": 81, "sr": 139.7, "wkts": 0, "econ": 0.0, "quwrof_pctile": 22.1, "notes": "Struggled against high-pace death bowling." },
+            { "name": "Dasun Shanaka", "role": "Pace All-Rounder", "runs": 63, "sr": 137.0, "wkts": 1, "econ": 10.00, "quwrof_pctile": 22.1, "notes": "Could not bridge 6th bowler gap; 1 wkt in 6 games." }
+        ]
+    },
+    "gaps": [
+        {
+            "gap_id": "gap_1",
+            "title": "Archer's Death Lockdown Partner",
+            "phase": "Death Overs (16-20)",
+            "problem": "RR surrendered 12.30 RPO in death overs in defeats. Sandeep Sharma (13.30 ER) and Deshpande (11.25 ER) collapsed when Archer bowled out.",
+            "benchmark": "Death Pressure Economy < 9.50, high dot %, yorker reliability",
+            "recommendations": [
+                { "name": "Jamie Overton", "country": "England", "age": 32, "type": "Overseas", "death_pres_econ": 6.62, "overall_bowpr": 1.3119, "verdict": "Top Target: 145 km/h heavy-ball seamer; 6.62 death pressure econ; lethal wide yorkers + power hitting." },
+                { "name": "Sakib Hussain", "country": "India", "age": 22, "type": "Indian Diamond", "death_pres_econ": 7.70, "overall_bowpr": 1.3108, "verdict": "Purse Saver: Uncapped Indian quick with slingy yorkers; 11 pressure wickets; saves an overseas slot." },
+                { "name": "Maheesh Theekshana", "country": "Sri Lanka", "age": 26, "type": "Overseas", "death_pres_econ": 6.00, "overall_bowpr": 1.1779, "verdict": "Jaipur Pitch Weapon: 6.00 death pressure econ; carrom balls and seam yorkers exploit SMS abrasive surface." }
+            ]
+        },
+        {
+            "gap_id": "gap_2",
+            "title": "Powerplay Strike Bowler",
+            "phase": "Powerplay (Overs 1-6)",
+            "problem": "In 7 defeats, RR took just 4 PP wickets in 42 overs (0.57 wkts/match) while conceding 11.50 RPO.",
+            "benchmark": "High PP Wicket Rate, PP Economy < 8.20, early swing/seam",
+            "recommendations": [
+                { "name": "Mohammed Siraj", "country": "India", "age": 32, "type": "Indian Frontline", "pp_wkts": 45, "pp_econ": 7.98, "verdict": "Marquee Pick: 45 PP wickets at sub-8 economy; ferocious seam movement to break top orders." },
+                { "name": "Khaleel Ahmed", "country": "India", "age": 29, "type": "Indian Left-Arm", "pp_wkts": 26, "pp_econ": 7.79, "verdict": "Local Fit: Native Rajasthan knowledge; left-arm angle shapes into right-handers; 7.79 PP economy." },
+                { "name": "Arshdeep Singh", "country": "India", "age": 27, "type": "Indian Dual-Phase", "pp_wkts": 31, "pp_econ": 8.47, "verdict": "Swing & Death: 31 PP wickets; bowls overs 1, 3, 18, 20 to bridge both Gap 1 and Gap 2." }
+            ]
+        },
+        {
+            "gap_id": "gap_3",
+            "title": "Clutch Middle/Death Finisher",
+            "phase": "Middle & Death Batting",
+            "problem": "Hetmyer slump (113.0 SR, 0 bat impact points). Middle overs SR fell from 161.9 in wins to 142.6 in losses.",
+            "benchmark": "Pressure Death SR > 185.0, 360-degree range against spin & high pace",
+            "recommendations": [
+                { "name": "Naman Dhir", "country": "India", "age": 27, "type": "Indian Target", "death_pres_sr": 209.5, "overall_bpr": 1.0362, "verdict": "Prime Indian Closer: 209.5 death pressure SR; attacks spin in overs 11-15 and pace in 16-20." },
+                { "name": "Cooper Connolly", "country": "Australia", "age": 23, "type": "Overseas", "death_pres_sr": 212.8, "overall_bpr": 1.0514, "verdict": "Hetmyer Successor: LHB clutch finisher; 212.8 death pressure SR; elite fielder + left-arm orthodox." },
+                { "name": "Shashank Singh", "country": "India", "age": 34, "type": "Indian Veteran", "death_pres_sr": 185.1, "overall_bpr": 1.0269, "verdict": "Proven Chase Master: 343 pressure balls; engineered multiple improbable 200+ run chases in IPL." }
+            ]
+        }
+    ],
+    "top10_batters": [
+        { "rank": 1, "name": "Tom Banton", "nationality": "England", "age": 28, "score": 1.1194, "pres_balls": 92, "pres_sr": 184.8, "base_sr": 159.5, "role": "Top/Middle Enforcer", "rr_fit": "Aggressive batter capable of destroying bowling in overs 5-15." },
+        { "rank": 2, "name": "Reeza Hendricks", "nationality": "South Africa", "age": 36, "score": 1.1001, "pres_balls": 294, "pres_sr": 179.3, "base_sr": 146.8, "role": "Composed Anchor/Pacer", "rr_fit": "Experienced veteran with ice in his veins during tough subcontinental chases." },
+        { "rank": 3, "name": "Cooper Connolly", "nationality": "Australia", "age": 23, "score": 1.0514, "pres_balls": 116, "pres_sr": 182.8, "base_sr": 162.9, "role": "Clutch Middle Finisher", "rr_fit": "Direct Hetmyer replacement. 212.8 death pressure SR, athletic fielder, left-arm spin." },
+        { "rank": 4, "name": "Liton Das", "nationality": "Bangladesh", "age": 32, "score": 1.0449, "pres_balls": 124, "pres_sr": 170.2, "base_sr": 133.0, "role": "360-Degree WK-Batter", "rr_fit": "Excellent against subcontinental spin; inventive shot-maker under high RRR." },
+        { "rank": 5, "name": "Naman Dhir", "nationality": "India", "age": 27, "score": 1.0362, "pres_balls": 209, "pres_sr": 198.7, "base_sr": 164.4, "role": "High-Velocity Indian Finisher", "rr_fit": "Plugs Gap 3 seamlessly. Destroys death bowling at 209.5 SR; allows overseas bowling slots." },
+        { "rank": 6, "name": "Donovan Ferreira", "nationality": "South Africa", "age": 28, "score": 1.0328, "pres_balls": 158, "pres_sr": 206.4, "base_sr": 170.7, "role": "Incumbent Death Destroyer", "rr_fit": "Retain at all costs. Struck at 233.3 at the death in pressure moments for RR." },
+        { "rank": 7, "name": "Andrew Balbirnie", "nationality": "Ireland", "age": 36, "score": 1.0309, "pres_balls": 130, "pres_sr": 150.8, "base_sr": 119.9, "role": "Experienced Stabilizer", "rr_fit": "Calculated chase builder against quality bowling attacks." },
+        { "rank": 8, "name": "Shashank Singh", "nationality": "India", "age": 34, "score": 1.0269, "pres_balls": 343, "pres_sr": 185.1, "base_sr": 161.6, "role": "Domestic Chase Specialist", "rr_fit": "Proven record in clutch IPL 200+ chases; calm decision-making under steep RRR." },
+        { "rank": 9, "name": "Ambati Rayudu", "nationality": "India", "age": 40, "score": 1.0145, "pres_balls": 75, "pres_sr": 172.0, "base_sr": 128.3, "role": "Seasoned Impact Veteran", "rr_fit": "Multi-time IPL champion; knows exactly how to pace high-leverage overs." },
+        { "rank": 10, "name": "Mayank Agarwal", "nationality": "India", "age": 35, "score": 1.0045, "pres_balls": 87, "pres_sr": 139.1, "base_sr": 127.0, "role": "Top-Order Pace Accumulator", "rr_fit": "Solid backup top-order batter capable of soaking pressure." }
+    ],
+    "top10_bowlers": [
+        { "rank": 1, "name": "Mayank Yadav", "nationality": "India", "age": 24, "score": 1.3531, "pres_balls": 203, "pres_econ": 6.81, "base_econ": 10.23, "pres_wkts": 6, "role": "150+ km/h Enforcer", "rr_fit": "Raw extreme pace. Tightens up to 6.81 economy under pressure; shatters middle orders." },
+        { "rank": 2, "name": "Jamie Overton", "nationality": "England", "age": 32, "score": 1.3119, "pres_balls": 173, "pres_econ": 7.58, "base_econ": 9.94, "pres_wkts": 6, "role": "Heavy-Ball Death Seamer", "rr_fit": "Plugs Gap 1. Nails wide yorkers at 6.62 death pressure economy. Perfect partner for Archer." },
+        { "rank": 3, "name": "Sakib Hussain", "nationality": "India", "age": 22, "score": 1.3108, "pres_balls": 132, "pres_econ": 7.82, "base_econ": 9.46, "pres_wkts": 11, "role": "Uncapped Indian Yorker Specialist", "rr_fit": "Purse Saver. 7.70 death pressure economy, 11 wickets in 132 pressure balls. High-ceiling talent." },
+        { "rank": 4, "name": "Matthew Humphreys", "nationality": "Ireland", "age": 23, "score": 1.2843, "pres_balls": 91, "pres_econ": 5.74, "base_econ": 7.20, "pres_wkts": 12, "role": "Precision Finger Spin", "rr_fit": "Phenomenal 5.74 economy under pressure; defensive choking spinner." },
+        { "rank": 5, "name": "Akeal Hosein", "nationality": "West Indies", "age": 33, "score": 1.2825, "pres_balls": 303, "pres_econ": 6.67, "base_econ": 8.30, "pres_wkts": 5, "role": "PP & Middle Arm-Ball Spin", "rr_fit": "Can bowl in the powerplay and middle; suffocates batters in low-scoring games." },
+        { "rank": 6, "name": "Mitchell Santner", "nationality": "New Zealand", "age": 34, "score": 1.2592, "pres_balls": 511, "pres_econ": 7.39, "base_econ": 7.73, "pres_wkts": 9, "role": "World-Class Choke Spinner", "rr_fit": "Over 500 pressure balls at 7.39 economy. Master of pace variation and defensive bowling." },
+        { "rank": 7, "name": "Gerald Coetzee", "nationality": "South Africa", "age": 26, "score": 1.2478, "pres_balls": 153, "pres_econ": 9.67, "base_econ": 10.73, "pres_wkts": 9, "role": "High-Pace Enforcer", "rr_fit": "Aggressive strike bowler who attacks batters with steep bouncers and yorkers." },
+        { "rank": 8, "name": "Sunil Narine", "nationality": "West Indies", "age": 37, "score": 1.2374, "pres_balls": 420, "pres_econ": 7.03, "base_econ": 7.01, "pres_wkts": 24, "role": "Universal Mystery Spinner", "rr_fit": "Unshakeable composure. 6.20 death pressure economy, 24 pressure wickets across all phases." },
+        { "rank": 9, "name": "Tabraiz Shamsi", "nationality": "South Africa", "age": 36, "score": 1.2222, "pres_balls": 101, "pres_econ": 7.43, "base_econ": 9.64, "pres_wkts": 11, "role": "Wrist-Spin Wicket-Taker", "rr_fit": "11 pressure wickets in 101 balls; drops economy by over 2.2 runs in high-leverage overs." },
+        { "rank": 10, "name": "Jasprit Bumrah", "nationality": "India", "age": 33, "score": 1.2027, "pres_balls": 606, "pres_econ": 7.76, "base_econ": 7.23, "pres_wkts": 30, "role": "Gold-Standard Bowler", "rr_fit": "Benchmark of world cricket: 606 pressure balls, 30 wickets, 7.28 death pressure economy." }
+    ],
+    "journey_thread": [
+        { "tweet_num": 1, "text": "🧵 1/8 Back in June 2026, I built QUWROF: an advanced IPL rating engine designed to evaluate players across phases, leverage, and context. Today, I'm releasing the Rajasthan Royals 2027 Mega Auction Blueprint for #SupeRRSelector. Here is how we did it:" },
+        { "tweet_num": 2, "text": "2/8 In QUWROF v1-v14, we discovered a fatal flaw in naive pressure rating: ratio metrics (Pres/Base) favor mediocre players with low baselines over genuine superstars. A 120 SR batter jumping from 100 gets 1.20x; Heinrich Klaasen at 180 SR from 175 gets 1.03x. That's absurd." },
+        { "tweet_num": 3, "text": "3/8 We engineered the Dual-Criterion Model: 50% Normalized Absolute Output (benchmarked vs P85/P15 elite performers) + 50% Relative Maintenance + 65:35 IPL:T20I Bayesian Shrinkage. Tested across 200,999 deliveries, it eliminates baseline bias." },
+        { "tweet_num": 4, "text": "4/8 Then we audited RR's 2026 season (16 matches, 9 wins, 7 losses) ball-by-ball. While Vaibhav Sooryavanshi had a 100th percentile season (776 runs @ 237 SR) and Jofra Archer took 25 wickets, RR had 3 critical structural flaws in their 7 defeats:" },
+        { "tweet_num": 5, "text": "5/8 Deficit 1: In losses, RR conceded 12.30 RPO in overs 16-20 (vs 9.24 in wins). Sandeep Sharma (13.3 ER) and Deshpande (11.25 ER) collapsed. When Archer finished his quota, opponents dismantled the death overs uncontested." },
+        { "tweet_num": 6, "text": "6/8 Deficit 2: Powerplay Toothlessness. In 9 wins, RR took 24 PP wickets. In 7 losses, RR took just 4 wickets total in 42 PP overs (0.57/game) while conceding 11.50 RPO. Opposition openers ran wild." },
+        { "tweet_num": 7, "text": "7/8 Deficit 3: Finisher Fragility. Shimron Hetmyer collapsed in 2026 (78 runs, 113 SR, 22nd percentile). In chases, RR middle-overs SR slumped to 142.6. When Donovan Ferreira fell, the innings died." },
+        { "tweet_num": 8, "text": "8/8 Our 2027 Mega Auction Solution:\n🎯 Gap 1: Jamie Overton (6.62 death pres econ) & Sakib Hussain (7.70 ER)\n🎯 Gap 2: Mohammed Siraj (45 PP wkts) / Khaleel Ahmed (7.79 ER)\n🎯 Gap 3: Naman Dhir (209.5 death pres SR) & Cooper Connolly (212.8 SR)\nFull dashboard live!" }
+    ],
+    "starting_xi": [
+        { "num": 1, "name": "Yashasvi Jaiswal", "type": "IND", "role": "Opening Batter", "tag": "Retained" },
+        { "num": 2, "name": "Vaibhav Sooryavanshi", "type": "IND", "role": "LHB Powerplay Demolisher (100th Pctile)", "tag": "Retained" },
+        { "num": 3, "name": "Sanju Samson (C/WK)", "type": "IND", "role": "Middle Overs Spin Dominator", "tag": "Retained" },
+        { "num": 4, "name": "Riyan Parag", "type": "IND", "role": "Middle Overs Anchor & Off-Spin", "tag": "Retained" },
+        { "num": 5, "name": "Cooper Connolly", "type": "Overseas ✈️", "role": "Clutch Middle Finisher (212.8 Death SR)", "tag": "Auction Target (Gap 3)" },
+        { "num": 6, "name": "Donovan Ferreira", "type": "Overseas ✈️", "role": "Death Destroyer (233.3 Death Pres SR)", "tag": "Retained" },
+        { "num": 7, "name": "Ravindra Jadeja", "type": "IND", "role": "Finger Spin Choke & Batting Depth", "tag": "Retained" },
+        { "num": 8, "name": "Jamie Overton", "type": "Overseas ✈️", "role": "145 km/h Death Lockdown Seamer (6.62 ER)", "tag": "Auction Target (Gap 1)" },
+        { "num": 9, "name": "Jofra Archer", "type": "Overseas ✈️", "role": "Pace Spearhead (99.2 Pctile ApexScore)", "tag": "Retained" },
+        { "num": 10, "name": "Mohammed Siraj / Khaleel Ahmed", "type": "IND", "role": "Powerplay Strike Bowler (45 PP Wkts)", "tag": "Auction Target (Gap 2)" },
+        { "num": 11, "name": "Ravi Bishnoi", "type": "IND", "role": "Middle Overs Mystery Leg-Spin", "tag": "Retained" }
+    ]
+}
+
+with open('d:/ipl-rating/ipl/public/rr_war_room_data.json', 'w') as f:
+    json.dump(data, f, indent=2)
+
+print("Generated d:/ipl-rating/ipl/public/rr_war_room_data.json successfully!")
