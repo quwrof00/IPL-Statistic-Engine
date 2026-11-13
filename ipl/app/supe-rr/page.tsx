@@ -52,8 +52,11 @@ const metricDescriptions: Record<string, string> = {
   sr_lift: "Strike Rate Lift: Pressure Strike Rate minus Overall Strike Rate."
 };
 
-const COMPARE_COLORS = ['#ea1a85', '#ffffff', '#a1a1aa', '#71717a'];
 const PINK = '#ea1a85';
+// Multi-color palette for compare radar & scatter — vivid & distinguishable
+const COMPARE_COLORS = [PINK, '#3b82f6', '#10b981', '#f59e0b'];
+// Scatter palette — nationality / impact buckets
+const SCATTER_PALETTE = [PINK, '#3b82f6', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#f43f5e', '#84cc16'];
 
 const InfoTooltip = ({ text, align = 'center' }: { text?: string; align?: 'center' | 'left' | 'right' }) => {
   const [open, setOpen] = useState(false);
@@ -165,6 +168,18 @@ export default function SupeRRPage() {
   }, [selectedPlayer]);
 
   const rawPool = role === 'batter' ? dataBatters : dataBowlers;
+
+  // Helper to compute percentile across pool for any metric
+  const computeMetricPercentile = useCallback((val: number | undefined | null, key: string, isInverted = false) => {
+    if (val === undefined || val === null) return 50;
+    const pool = role === 'batter' ? dataBatters : dataBowlers;
+    const values = pool
+      .map(p => (p as any)[key])
+      .filter(v => v !== undefined && v !== null && !isNaN(v)) as number[];
+    if (values.length <= 1) return 50;
+    const countLesser = values.filter(v => isInverted ? v > val : v < val).length;
+    return Math.round((countLesser / (values.length - 1)) * 100);
+  }, [role, dataBatters, dataBowlers]);
 
   // Global canonical rank map (Never changes on search or filter)
   const globalRankMap = useMemo(() => {
@@ -334,15 +349,26 @@ export default function SupeRRPage() {
   }, [comparedPlayers, role]);
 
   // Scatter Plot Data
+  // Build a stable nationality → color mapping for scatter
+  const nationalityColorMap = useMemo(() => {
+    const nats = Array.from(new Set(sortedList.map(p => p.nationality))).sort();
+    const map = new Map<string, string>();
+    nats.forEach((nat, i) => {
+      map.set(nat, SCATTER_PALETTE[i % SCATTER_PALETTE.length]);
+    });
+    return map;
+  }, [sortedList]);
+
   const scatterPlotData = useMemo(() => {
     return sortedList.map(p => ({
       name: p.player_name,
       x: (p as any)[scatterX] ?? 0,
       y: (p as any)[scatterY] ?? 0,
       impact: p.combined_score,
-      nationality: p.nationality
+      nationality: p.nationality,
+      color: nationalityColorMap.get(p.nationality) ?? PINK,
     }));
-  }, [sortedList, scatterX, scatterY]);
+  }, [sortedList, scatterX, scatterY, nationalityColorMap]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-zinc-200 selection:bg-zinc-700 selection:text-white pb-32">
@@ -469,8 +495,8 @@ export default function SupeRRPage() {
       )}
 
       {/* HEADER SECTION (CLEAN & SPACIOUS) */}
-      <header className="pt-28 md:pt-36 pb-12 px-4 md:px-10 border-b border-zinc-900">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8">
+      <header className="pt-28 md:pt-36 pb-12 px-4 md:px-8 border-b border-zinc-900">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-3">
             <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-500 block font-semibold">
               T20 Pressure Evaluation • 2022 to 2026
@@ -497,14 +523,14 @@ export default function SupeRRPage() {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main className="max-w-6xl mx-auto px-4 md:px-10 pt-10">
+      <main className="max-w-7xl mx-auto px-0 md:px-8 pt-10">
 
         {/* ── TAB 1: RANKINGS (CLEAN & SPACIOUS) ── */}
         {activeTab === 'rankings' && (
           <div className="space-y-8">
 
             {/* Controls Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-900 px-4 md:px-0">
               <div className="flex items-center gap-3">
                 {/* Batters vs Bowlers */}
                 <div className="inline-flex rounded bg-zinc-950 border border-zinc-800 p-1">
@@ -552,7 +578,7 @@ export default function SupeRRPage() {
             </div>
 
             {/* Sub-Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-zinc-950 border border-zinc-900 p-4 rounded text-xs font-mono">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-zinc-950 border border-zinc-900 p-4 rounded text-xs font-mono px-4 md:px-0">
               <div>
                 <label className="text-[10px] uppercase text-zinc-500 block mb-1.5">Origin</label>
                 <select
@@ -596,38 +622,38 @@ export default function SupeRRPage() {
             </div>
 
             {/* MAIN RANKINGS LIST / TABLE */}
-            <div className="rounded border border-zinc-800 bg-[#0d0d0d] overflow-hidden shadow-2xl">
-              <table className="w-full text-left border-collapse">
+            <div className="border border-zinc-800 bg-[#0d0d0d] overflow-x-auto shadow-2xl">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-[#121212] text-[10px] font-mono uppercase text-zinc-400 tracking-wider">
-                    <th onClick={() => handleSort('rank')} className="py-4 px-4 sm:px-6 cursor-pointer hover:text-white select-none w-16">
+                    <th onClick={() => handleSort('rank')} className="py-5 px-4 md:px-6 cursor-pointer hover:text-white select-none w-16 sticky left-0 z-10 bg-[#121212]">
                       # {sortField === 'rank' && (sortAsc ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => handleSort('player_name')} className="py-4 px-4 sm:px-6 cursor-pointer hover:text-white select-none">
+                    <th onClick={() => handleSort('player_name')} className="py-5 px-4 md:px-6 cursor-pointer hover:text-white select-none sticky left-[52px] md:left-[60px] z-10 bg-[#121212]">
                       Player {sortField === 'player_name' && (sortAsc ? '↑' : '↓')}
                     </th>
-                    <th className="hidden md:table-cell py-4 px-4 text-zinc-500">Nation</th>
-                    <th onClick={() => handleSort('total_pressure_balls')} className="hidden md:table-cell py-4 px-4 text-right cursor-pointer hover:text-white select-none">
-                      Balls <InfoTooltip text={metricDescriptions.total_pressure_balls} />
+                    <th className="py-5 px-4 text-zinc-500">Nation</th>
+                    <th onClick={() => handleSort('total_pressure_balls')} className="py-5 px-4 text-right cursor-pointer hover:text-white select-none">
+                      Balls <InfoTooltip text={metricDescriptions.total_pressure_balls} /> {sortField === 'total_pressure_balls' && (sortAsc ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => handleSort('pres_metric')} className="hidden sm:table-cell py-4 px-4 text-right cursor-pointer hover:text-white select-none">
-                      {role === 'batter' ? 'Pressure SR' : 'Pressure Econ'} <InfoTooltip text={metricDescriptions.pres_metric} />
+                    <th onClick={() => handleSort('pres_metric')} className="py-5 px-4 text-right cursor-pointer hover:text-white select-none">
+                      {role === 'batter' ? 'Pressure SR' : 'Pressure Econ'} <InfoTooltip text={metricDescriptions.pres_metric} /> {sortField === 'pres_metric' && (sortAsc ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => handleSort('base_metric')} className="hidden lg:table-cell py-4 px-4 text-right cursor-pointer hover:text-white select-none">
-                      {role === 'batter' ? 'Base SR' : 'Base Econ'} <InfoTooltip text={metricDescriptions.base_metric} />
+                    <th onClick={() => handleSort('base_metric')} className="py-5 px-4 text-right cursor-pointer hover:text-white select-none">
+                      {role === 'batter' ? 'Base SR' : 'Base Econ'} <InfoTooltip text={metricDescriptions.base_metric} /> {sortField === 'base_metric' && (sortAsc ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => handleSort('delta')} className="hidden md:table-cell py-4 px-4 text-right cursor-pointer hover:text-white select-none">
-                      Delta <InfoTooltip text={metricDescriptions.delta} />
+                    <th onClick={() => handleSort('delta')} className="py-5 px-4 text-right cursor-pointer hover:text-white select-none">
+                      Delta <InfoTooltip text={metricDescriptions.delta} /> {sortField === 'delta' && (sortAsc ? '↑' : '↓')}
                     </th>
                     {role === 'bowler' && (
-                      <th onClick={() => handleSort('pres_wkts')} className="hidden lg:table-cell py-4 px-4 text-right cursor-pointer hover:text-white select-none">
-                        Wkts <InfoTooltip text={metricDescriptions.pres_wkts} />
+                      <th onClick={() => handleSort('pres_wkts')} className="py-5 px-4 text-right cursor-pointer hover:text-white select-none">
+                        Wkts <InfoTooltip text={metricDescriptions.pres_wkts} /> {sortField === 'pres_wkts' && (sortAsc ? '↑' : '↓')}
                       </th>
                     )}
-                    <th onClick={() => handleSort('combined_score')} className="py-4 px-4 sm:px-6 text-right font-bold cursor-pointer hover:text-zinc-300 select-none" style={{ color: PINK }}>
+                    <th onClick={() => handleSort('combined_score')} className="py-5 px-4 md:px-6 text-right font-bold cursor-pointer hover:text-zinc-300 select-none" style={{ color: PINK }}>
                       Score <InfoTooltip text={metricDescriptions.combined_score} align="right" /> {sortField === 'combined_score' && (sortAsc ? '↑' : '↓')}
                     </th>
-                    <th className="hidden sm:table-cell py-4 px-4 text-center w-24">Compare</th>
+                    <th className="py-5 px-4 text-center w-24">Compare</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-900 font-mono text-sm">
@@ -646,7 +672,7 @@ export default function SupeRRPage() {
                         className="hover:bg-zinc-900/60 transition cursor-pointer group"
                       >
                         {/* Rank */}
-                        <td className="py-4 px-4 sm:px-6 font-bold transition group-hover:opacity-80"
+                        <td className="py-5 px-4 md:px-6 font-bold transition group-hover:opacity-80 sticky left-0 bg-[#0d0d0d] group-hover:bg-zinc-900/60"
                           style={{
                             color: p.rank === 1 ? PINK : p.rank === 2 ? '#e4e4e7' : p.rank === 3 ? '#a1a1aa' : '#52525b'
                           }}>
@@ -654,56 +680,52 @@ export default function SupeRRPage() {
                         </td>
 
                         {/* Player Name */}
-                        <td className="py-4 px-4 sm:px-6 font-sans font-bold text-white group-hover:text-zinc-300 transition">
-                          <div className="flex flex-col">
-                            <span className="text-sm sm:text-base">{p.player_name}</span>
-                            {/* Mobile Subtitle showing Nationality */}
-                            <span className="md:hidden text-[11px] font-normal text-zinc-500 font-mono">
-                              {p.nationality}
-                            </span>
+                        <td className="py-5 px-4 md:px-6 font-sans font-bold text-white group-hover:text-zinc-300 transition sticky left-[52px] md:left-[60px] bg-[#0d0d0d] group-hover:bg-zinc-900/60">
+                          <div className="flex flex-col min-w-[120px]">
+                            <span className="text-sm md:text-base">{p.player_name}</span>
                           </div>
                         </td>
 
-                        {/* Nationality (Desktop) */}
-                        <td className="hidden md:table-cell py-4 px-4 font-sans text-zinc-400">
+                        {/* Nationality */}
+                        <td className="py-5 px-4 font-sans text-zinc-400 text-sm">
                           {p.nationality}
                         </td>
 
-                        {/* Pressure Balls (Desktop) */}
-                        <td className="hidden md:table-cell py-4 px-4 text-right text-zinc-400">
+                        {/* Pressure Balls */}
+                        <td className="py-5 px-4 text-right text-zinc-400 text-sm">
                           {p.total_pressure_balls}
                         </td>
 
-                        {/* Pressure Metric (Tablet + Desktop) */}
-                        <td className="hidden sm:table-cell py-4 px-4 text-right font-bold text-white">
+                        {/* Pressure Metric */}
+                        <td className="py-5 px-4 text-right font-bold text-white text-sm">
                           {presVal.toFixed(1)}
                         </td>
 
-                        {/* Base Metric (Desktop Large) */}
-                        <td className="hidden lg:table-cell py-4 px-4 text-right text-zinc-500">
+                        {/* Base Metric */}
+                        <td className="py-5 px-4 text-right text-zinc-500 text-sm">
                           {baseVal.toFixed(1)}
                         </td>
 
-                        {/* Delta (Desktop) */}
-                        <td className={`hidden md:table-cell py-4 px-4 text-right font-semibold ${isPositive ? 'text-white' : 'text-zinc-500'}`}>
+                        {/* Delta */}
+                        <td className={`hidden md:table-cell py-5 px-4 text-right font-semibold text-sm ${isPositive ? 'text-white' : 'text-zinc-500'}`}>
                           {delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1)}
                         </td>
 
                         {/* Bowler Wickets */}
                         {!isBatter && (
-                          <td className="hidden lg:table-cell py-4 px-4 text-right text-zinc-400">
+                          <td className="py-5 px-4 text-right text-zinc-400 text-sm">
                             {p.pres_wkts ?? 0}
                           </td>
                         )}
 
                         {/* Combined Score (Always Visible, Prominent) */}
-                        <td className="py-4 px-4 sm:px-6 text-right font-black text-base sm:text-lg"
+                        <td className="py-5 px-4 md:px-6 text-right font-black text-lg md:text-xl"
                           style={{ color: p.rank === 1 ? PINK : '#ffffff' }}>
                           {p.combined_score.toFixed(2)}
                         </td>
 
                         {/* Compare Action */}
-                        <td className="hidden sm:table-cell py-4 px-4 text-center">
+                        <td className="py-5 px-4 text-center">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -723,7 +745,7 @@ export default function SupeRRPage() {
               </table>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-zinc-500 font-mono pt-2">
+            <div className="flex items-center justify-between text-xs text-zinc-500 font-mono pt-2 px-4 md:px-0">
               <span>Showing {displayedList.length} of {filteredList.length} players</span>
               <span className="hidden sm:inline">Tap any row for details</span>
             </div>
@@ -983,13 +1005,25 @@ export default function SupeRRPage() {
                       {scatterPlotData.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={entry.impact > 80 ? PINK : '#71717a'}
-                          fillOpacity={entry.impact > 80 ? 0.9 : 0.4}
+                          fill={entry.color}
+                          fillOpacity={0.85}
+                          stroke={entry.color}
+                          strokeOpacity={0.3}
+                          strokeWidth={1}
                         />
                       ))}
                     </Scatter>
                   </ScatterChart>
                 </ResponsiveContainer>
+              </div>
+              {/* Nationality colour legend */}
+              <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2">
+                {Array.from(nationalityColorMap.entries()).map(([nat, col]) => (
+                  <div key={nat} className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: col }} />
+                    <span className="text-[11px] font-mono text-zinc-400">{nat}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1271,9 +1305,14 @@ export default function SupeRRPage() {
                       <span className="text-xs font-mono uppercase text-zinc-400 font-bold">Pressure Deliveries</span>
                       <InfoTooltip text={metricDescriptions.total_pressure_balls} />
                     </div>
-                    <div className="text-xl font-black text-white font-mono">{selectedPlayer.total_pressure_balls}</div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-xl font-black text-white font-mono">{selectedPlayer.total_pressure_balls}</div>
+                      <span className="text-[11px] font-mono text-zinc-400 font-bold">
+                        {computeMetricPercentile(selectedPlayer.total_pressure_balls, 'total_pressure_balls')}th %ile
+                      </span>
+                    </div>
                     <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, (selectedPlayer.total_pressure_balls / 500) * 100)}%`, background: PINK }}></div>
+                      <div className="h-full rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.total_pressure_balls, 'total_pressure_balls')}%`, background: PINK }}></div>
                     </div>
                   </div>
 
@@ -1285,9 +1324,14 @@ export default function SupeRRPage() {
                       </span>
                       <InfoTooltip text={metricDescriptions.pres_metric} />
                     </div>
-                    <div className="text-xl font-black text-white font-mono">{selectedPlayer.pres_metric?.toFixed(1) ?? '—'}</div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-xl font-black text-white font-mono">{selectedPlayer.pres_metric?.toFixed(1) ?? '—'}</div>
+                      <span className="text-[11px] font-mono text-zinc-400 font-bold">
+                        {computeMetricPercentile(selectedPlayer.pres_metric, 'pres_metric', role === 'bowler')}th %ile
+                      </span>
+                    </div>
                     <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${selectedPlayer.percentile}%`, background: PINK }}></div>
+                      <div className="h-full rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.pres_metric, 'pres_metric', role === 'bowler')}%`, background: PINK }}></div>
                     </div>
                   </div>
 
@@ -1299,9 +1343,14 @@ export default function SupeRRPage() {
                       </span>
                       <InfoTooltip text={metricDescriptions.base_metric} />
                     </div>
-                    <div className="text-xl font-black text-zinc-400 font-mono">{selectedPlayer.base_metric?.toFixed(1) ?? '—'}</div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-xl font-black text-zinc-400 font-mono">{selectedPlayer.base_metric?.toFixed(1) ?? '—'}</div>
+                      <span className="text-[11px] font-mono text-zinc-500 font-bold">
+                        {computeMetricPercentile(selectedPlayer.base_metric, 'base_metric', role === 'bowler')}th %ile
+                      </span>
+                    </div>
                     <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-zinc-600" style={{ width: '70%' }}></div>
+                      <div className="h-full bg-zinc-600 rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.base_metric, 'base_metric', role === 'bowler')}%` }}></div>
                     </div>
                   </div>
 
@@ -1313,9 +1362,14 @@ export default function SupeRRPage() {
                           <span className="text-xs font-mono uppercase text-zinc-400 font-bold">Pressure Wickets</span>
                           <InfoTooltip text={metricDescriptions.pres_wkts} />
                         </div>
-                        <div className="text-xl font-black text-white font-mono">{selectedPlayer.pres_wkts ?? 0}</div>
+                        <div className="flex items-baseline justify-between">
+                          <div className="text-xl font-black text-white font-mono">{selectedPlayer.pres_wkts ?? 0}</div>
+                          <span className="text-[11px] font-mono text-zinc-400 font-bold">
+                            {computeMetricPercentile(selectedPlayer.pres_wkts, 'pres_wkts')}th %ile
+                          </span>
+                        </div>
                         <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-white" style={{ width: `${Math.min(100, ((selectedPlayer.pres_wkts ?? 0) / 40) * 100)}%` }}></div>
+                          <div className="h-full bg-white rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.pres_wkts, 'pres_wkts')}%` }}></div>
                         </div>
                       </div>
 
@@ -1324,11 +1378,16 @@ export default function SupeRRPage() {
                           <span className="text-xs font-mono uppercase text-zinc-400 font-bold">Lone Wolf Multiplier</span>
                           <InfoTooltip text={metricDescriptions.lone_wolf_multiplier} />
                         </div>
-                        <div className="text-xl font-black text-white font-mono">
-                          +{selectedPlayer.lone_wolf_multiplier?.toFixed(2) ?? '0.00'}
+                        <div className="flex items-baseline justify-between">
+                          <div className="text-xl font-black text-white font-mono">
+                            +{selectedPlayer.lone_wolf_multiplier?.toFixed(2) ?? '0.00'}
+                          </div>
+                          <span className="text-[11px] font-mono text-zinc-400 font-bold">
+                            {computeMetricPercentile(selectedPlayer.lone_wolf_multiplier, 'lone_wolf_multiplier')}th %ile
+                          </span>
                         </div>
                         <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-white" style={{ width: `${Math.min(100, ((selectedPlayer.lone_wolf_multiplier ?? 0) / 2.0) * 100)}%` }}></div>
+                          <div className="h-full bg-white rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.lone_wolf_multiplier, 'lone_wolf_multiplier')}%` }}></div>
                         </div>
                       </div>
                     </>
@@ -1339,11 +1398,16 @@ export default function SupeRRPage() {
                           <span className="text-xs font-mono uppercase text-zinc-400 font-bold">Strike Rate Lift</span>
                           <InfoTooltip text={metricDescriptions.sr_lift} />
                         </div>
-                        <div className="text-xl font-black text-white font-mono">
-                          {(selectedPlayer.delta ?? 0) > 0 ? `+${selectedPlayer.delta?.toFixed(1)}` : selectedPlayer.delta?.toFixed(1)}
+                        <div className="flex items-baseline justify-between">
+                          <div className="text-xl font-black text-white font-mono">
+                            {(selectedPlayer.delta ?? 0) > 0 ? `+${selectedPlayer.delta?.toFixed(1)}` : selectedPlayer.delta?.toFixed(1)}
+                          </div>
+                          <span className="text-[11px] font-mono text-zinc-400 font-bold">
+                            {computeMetricPercentile(selectedPlayer.delta, 'delta')}th %ile
+                          </span>
                         </div>
                         <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-white" style={{ width: `${Math.min(100, Math.max(10, ((selectedPlayer.delta ?? 0) + 15) * 3))}%` }}></div>
+                          <div className="h-full bg-white rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.delta, 'delta')}%` }}></div>
                         </div>
                       </div>
 
@@ -1352,9 +1416,14 @@ export default function SupeRRPage() {
                           <span className="text-xs font-mono uppercase text-zinc-400 font-bold">Total Runs</span>
                           <InfoTooltip text="Total career runs scored in 2022-2026 dataset" />
                         </div>
-                        <div className="text-xl font-black text-zinc-300 font-mono">{selectedPlayer.total_runs ?? '—'}</div>
+                        <div className="flex items-baseline justify-between">
+                          <div className="text-xl font-black text-zinc-300 font-mono">{selectedPlayer.total_runs ?? '—'}</div>
+                          <span className="text-[11px] font-mono text-zinc-500 font-bold">
+                            {computeMetricPercentile(selectedPlayer.total_runs, 'total_runs')}th %ile
+                          </span>
+                        </div>
                         <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-zinc-600" style={{ width: '80%' }}></div>
+                          <div className="h-full bg-zinc-600 rounded-full" style={{ width: `${computeMetricPercentile(selectedPlayer.total_runs, 'total_runs')}%` }}></div>
                         </div>
                       </div>
                     </>
@@ -1366,7 +1435,12 @@ export default function SupeRRPage() {
                       <span className="text-xs font-mono uppercase text-zinc-400 font-bold">Overall Rating</span>
                       <InfoTooltip text={metricDescriptions.combined_score} align="right" />
                     </div>
-                    <div className="text-xl font-black text-white font-mono">{selectedPlayer.combined_score.toFixed(2)}</div>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-xl font-black text-white font-mono">{selectedPlayer.combined_score.toFixed(2)}</div>
+                      <span className="text-[11px] font-mono text-zinc-400 font-bold" style={{ color: PINK }}>
+                        {selectedPlayer.percentile}th %ile
+                      </span>
+                    </div>
                     <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${selectedPlayer.percentile}%`, background: PINK }}></div>
                     </div>
